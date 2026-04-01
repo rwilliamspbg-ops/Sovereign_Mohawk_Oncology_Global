@@ -89,6 +89,11 @@ body {
   font-weight: 700;
 }
 
+.nav-link {
+  display: block;
+  text-decoration: none;
+}
+
 .disease-filter {
   margin-top: 16px;
   border-top: 1px dashed var(--line);
@@ -195,6 +200,10 @@ body {
   color: var(--ink-muted);
   font-size: 0.9rem;
   min-height: 62px;
+}
+
+.feature-item.compact p {
+  min-height: 0;
 }
 
 .feature-action {

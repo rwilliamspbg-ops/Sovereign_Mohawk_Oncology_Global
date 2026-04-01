@@ -2,6 +2,7 @@
 
 Version 1.0 | April 1, 2026  
 Status: Formalized for Global Node Onboarding
+Last updated: April 1, 2026
 
 ## I. The Declaration of Data Sovereignty
 
