@@ -1,0 +1,72 @@
+{
+  "allowed_client_ids": [
+    "hospital-rd-01",
+    "hospital-rd-02",
+    "hospital-rd-03",
+    "hospital-rd-04"
+  ],
+  "client_public_keys": {},
+  "client_public_keys_env": "FLWR_RD_CLIENT_PUBLIC_KEYS_JSON",
+  "attestation_public_keys": {},
+  "attestation_public_keys_env": "FLWR_RD_ATTESTATION_PUBLIC_KEYS_JSON",
+  "require_attestation": true,
+  "attestation_mode": "ed25519_quote",
+  "attestation_max_age_seconds": 180,
+  "attestation_expected_pcrs": {
+    "0": "0f6c1d82a64c1890ea5fda2a0fd182f0f680c821d5cde1fca56406f6dcce4f11",
+    "7": "d6bdf8442f8f0cc8cfdf4e7d9602f0f04fdcbdf49d66de3433173842b67e0f3a"
+  },
+  "attestation_require_nonce_binding": true,
+  "require_signature": true,
+  "signature_mode": "ed25519",
+  "require_nonce": true,
+  "nonce_store_mode": "sqlite",
+  "nonce_sqlite_path": "rare_disease_nonce_cache.db",
+  "nonce_redis_url": "redis://127.0.0.1:6379/0",
+  "nonce_postgres_dsn": "",
+  "nonce_postgres_table": "seen_nonces",
+  "max_payload_bytes": 3500000,
+  "max_epsilon_spent_per_round": 0.5,
+  "max_gradient_zscore": 3.0,
+  "enable_governance_contract": true,
+  "governance_required_gates": [
+    "irb_approved",
+    "dpo_reviewed",
+    "data_deidentified",
+    "attestation_ok",
+    "signature_verified",
+    "dp_within_budget"
+  ],
+  "slashing_enabled": true,
+  "initial_stake": 120,
+  "strike_quarantine_threshold": 2,
+  "siem_webhook_url": "",
+  "siem_webhook_url_env": "FLWR_RD_SIEM_WEBHOOK_URL",
+  "siem_timeout_seconds": 2,
+  "siem_strike_alert_threshold": 2,
+  "slash_amounts": {
+    "SIGNATURE_INVALID": 25,
+    "ATTESTATION_FAILED": 30,
+    "NONCE_REPLAY": 20,
+    "DP_BUDGET_EXCEEDED": 15,
+    "POISONING_ANOMALY": 35,
+    "CLIENT_NOT_ALLOWED": 20,
+    "POLICY_ERROR": 10
+  },
+  "required_metrics": [
+    "client_id",
+    "attestation_ok",
+    "signature_verified",
+    "irb_approved",
+    "dpo_reviewed",
+    "data_deidentified",
+    "epsilon_spent",
+    "payload_size_bytes",
+    "nonce",
+    "payload_hash",
+    "gradient_zscore",
+    "signature_hex",
+    "attestation_quote_json",
+    "attestation_signature_hex"
+  ]
+}

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sovereign MOHAWK Oncology & Global Disease Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-bg"></div>
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>SOv-MOHAWK</h1>
+        <p>Oncology + Global Disease</p>
+      </div>
+
+      <nav class="nav" id="main-nav">
+        <button class="nav-item active" data-section="dashboard">Dashboard</button>
+        <button class="nav-item" data-section="trials">Research Trials</button>
+        <button class="nav-item" data-section="pipeline">FL Pipeline</button>
+        <button class="nav-item" data-section="compliance">HIPAA / GDPR</button>
+        <button class="nav-item" data-section="security">Security</button>
+        <button class="nav-item" data-section="consent">Consent Mgmt</button>
+        <button class="nav-item" data-section="metrics">Prometheus Metrics</button>
+        <button class="nav-item" data-section="dpia">DPIA Generator</button>
+        <button class="nav-item" data-section="llm">LLM Input Workflow</button>
+        <button class="nav-item" data-section="assist">Assist + Threat Analysis</button>
+        <button class="nav-item" data-section="professor">Professor Plan</button>
+        <button class="nav-item" data-section="goldsec">Security Gold</button>
+      </nav>
+
+      <div class="disease-filter" id="disease-filter">
+        <h3>Disease Areas</h3>
+        <button class="chip active" data-disease="all">All</button>
+        <button class="chip" data-disease="oncology">Oncology</button>
+        <button class="chip" data-disease="rare">Rare Disease</button>
+        <button class="chip" data-disease="infectious">Infectious</button>
+        <button class="chip" data-disease="neuro">Neurological</button>
+      </div>
+    </aside>
+
+    <section class="content" id="content-root">
+      <header class="topbar">
+        <div>
+          <h2 id="section-title">Dashboard</h2>
+          <p id="section-subtitle">47-node federated research network and live privacy budget telemetry.</p>
+        </div>
+        <div class="eps-box">
+          <div>
+            <span>Epsilon</span>
+            <strong id="eps-value">0.62 / 0.80</strong>
+          </div>
+          <div>
+            <span>Delta</span>
+            <strong id="delta-value">1e-5</strong>
+          </div>
+        </div>
+      </header>
+
+      <div class="panel-grid">
+        <section class="panel" data-view="dashboard">
+          <h3>Global Node Map (47)</h3>
+          <p class="muted">Click a region node to inspect site status and secure aggregation readiness.</p>
+          <div class="node-map" id="node-map"></div>
+          <div id="node-detail" class="detail-box">Select a region for details.</div>
+        </section>
+
+        <section class="panel" data-view="dashboard">
+          <h3>FL Pipeline Stages</h3>
+          <p class="muted">Mapped to MOHAWK runtime flow: local agent to global model assembly.</p>
+          <div class="pipeline" id="pipeline-stages"></div>
+          <div class="meter-group">
+            <label>Privacy Budget</label>
+            <div class="meter"><div id="eps-meter" class="bar"></div></div>
+          </div>
+        </section>
+
+        <section class="panel" data-view="trials" hidden>
+          <h3>Active Studies</h3>
+          <table class="data-table" id="trial-table"></table>
+          <div id="trial-detail" class="detail-box">Click a study row to drill in.</div>
+        </section>
+
+        <section class="panel" data-view="pipeline" hidden>
+          <h3>MOHAWK Runtime Stream</h3>
+          <div class="log-stream" id="runtime-log"></div>
+          <div class="capabilities">
+            <div>
+              <h4>capabilities.json (allowed)</h4>
+              <ul id="allowed-caps"></ul>
+            </div>
+            <div>
+              <h4>capabilities.json (blocked)</h4>
+              <ul id="blocked-caps"></ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" data-view="compliance" hidden>
+          <h3>HIPAA + GDPR Control Mapping</h3>
+          <table class="data-table" id="compliance-table"></table>
+        </section>
+
+        <section class="panel" data-view="security" hidden>
+          <h3>Security Architecture</h3>
+          <div class="card-grid" id="security-cards"></div>
+        </section>
+
+        <section class="panel" data-view="consent" hidden>
+          <h3>Consent Management</h3>
+          <div id="consent-switches" class="switch-grid"></div>
+        </section>
+
+        <section class="panel" data-view="metrics" hidden>
+          <h3>Prometheus Metrics</h3>
+          <div class="metrics-toolbar">
+            <div id="metric-feed"></div>
+            <div id="metric-window"></div>
+          </div>
+          <div id="alarm-banner" class="alarm ok">Status: NORMAL</div>
+          <canvas id="metrics-canvas" width="900" height="260" aria-label="metrics chart"></canvas>
+          <div class="metric-bottom" id="metric-bottom"></div>
+        </section>
+
+        <section class="panel" data-view="dpia" hidden>
+          <h3>GDPR DPIA Generator</h3>
+          <div class="stepper" id="dpia-stepper"></div>
+          <form id="dpia-form" class="dpia-form"></form>
+          <div class="form-actions">
+            <button id="dpia-prev" type="button">Back</button>
+            <button id="dpia-next" type="button">Next</button>
+            <button id="dpia-validate" type="button">Validate</button>
+            <button id="dpia-generate" type="button">Generate DPIA Report</button>
+          </div>
+          <div id="dpia-feedback" class="detail-box">Complete all required fields to generate report.</div>
+          <pre id="dpia-report" class="report-box"></pre>
+        </section>
+
+        <section class="panel" data-view="llm" hidden>
+          <h3>LLM Input Workflow</h3>
+          <p class="muted">Model intake, prompt policy checks, governance gating, and execution audit tracking.</p>
+
+          <div class="workflow-grid">
+            <article class="workflow-card">
+              <h4>Model Registry Form</h4>
+              <form id="model-registry-form" class="mini-form"></form>
+              <div class="form-actions">
+                <button type="button" id="model-helper">Auto-fill Helper</button>
+                <button type="button" id="model-autotune">Auto-Tune Runtime</button>
+                <button type="button" id="model-save">Save Registry Entry</button>
+              </div>
+              <div id="model-feedback" class="detail-box">No model entry saved yet.</div>
+            </article>
+
+            <article class="workflow-card">
+              <h4>Prompt-Template Validator</h4>
+              <label for="prompt-template">Template Body</label>
+              <textarea id="prompt-template" rows="7" placeholder="Example: Summarize outcomes for {{trial_id}} and {{cohort_id}} with no direct identifiers."></textarea>
+              <div class="form-actions">
+                <button type="button" id="prompt-helper">Insert Safe Template Helper</button>
+                <button type="button" id="prompt-validate">Validate Template</button>
+                <button type="button" id="prompt-autotune">Auto-Tune Prompt Controls</button>
+              </div>
+              <div id="prompt-feedback" class="detail-box">Awaiting template validation.</div>
+            </article>
+
+            <article class="workflow-card">
+              <h4>Governance Gate Checklist</h4>
+              <div id="gate-list" class="switch-grid"></div>
+              <div class="form-actions">
+                <button type="button" id="gate-helper">Apply Recommended Defaults</button>
+                <button type="button" id="gate-evaluate">Evaluate Readiness</button>
+              </div>
+              <div id="gate-feedback" class="detail-box">Evaluate governance readiness before execution.</div>
+            </article>
+
+            <article class="workflow-card">
+              <h4>Execution Audit Viewer</h4>
+              <div class="form-actions">
+                <button type="button" id="audit-simulate">Simulate Execution</button>
+                <button type="button" id="audit-clear">Clear Audit</button>
+              </div>
+              <table class="data-table" id="llm-audit-table"></table>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel" data-view="assist" hidden>
+          <h3>Research Assistance Agent + Overall Threat Analysis</h3>
+          <p class="muted">Guided research/review assistant with a full-platform threat posture snapshot.</p>
+
+          <div class="assist-grid">
+            <article class="assist-card">
+              <h4>Assistance Agent</h4>
+              <div class="mini-form" id="assist-form">
+                <label>
+                  Assistant Mode
+                  <select id="assist-mode">
+                    <option value="research">Research Planning</option>
+                    <option value="review">Protocol Review</option>
+                    <option value="compliance">Compliance Review</option>
+                  </select>
+                </label>
+                <label>
+                  Objective
+                  <input id="assist-objective" type="text" placeholder="Example: Compare enrollment drift in SMOP-2024-002" />
+                </label>
+                <label>
+                  Context
+                  <textarea id="assist-context" rows="6" placeholder="Add notes, constraints, target regions, regulatory focus, and expected outputs."></textarea>
+                </label>
+              </div>
+              <div class="form-actions">
+                <button type="button" id="assist-helper">Load Smart Helper Prompt</button>
+                <button type="button" id="assist-run">Run Assistance Agent</button>
+                <button type="button" id="assist-review-packet">Build Review Packet</button>
+              </div>
+              <div id="assist-feedback" class="detail-box">Assistant is ready. Provide objective and context.</div>
+              <pre id="assist-output" class="report-box"></pre>
+            </article>
+
+            <article class="assist-card">
+              <h4>Overall Threat Analysis</h4>
+              <p class="muted">STRIDE-style posture across platform runtime, compliance, and LLM workflows.</p>
+              <div class="form-actions">
+                <button type="button" id="threat-autotune">Auto-Tune Mitigations</button>
+                <button type="button" id="threat-generate">Generate Threat Analysis</button>
+              </div>
+              <div id="threat-summary" class="detail-box">Threat posture not generated yet.</div>
+              <table class="data-table" id="threat-table"></table>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel" data-view="professor" hidden>
+          <h3>Professor-Grade Implementation Plan</h3>
+          <p class="muted">Translational oncology execution center: roadmap, equipment plug-and-play readiness, standards, and procurement automation.</p>
+
+          <div class="professor-grid">
+            <article class="assist-card">
+              <h4>90-Day Research Roadmap</h4>
+              <div class="form-actions">
+                <button type="button" id="roadmap-week0">Initialize Weeks 0-2</button>
+                <button type="button" id="roadmap-week6">Advance to Weeks 3-6</button>
+                <button type="button" id="roadmap-week12">Advance to Weeks 7-12</button>
+              </div>
+              <div id="roadmap-status" class="detail-box">Roadmap not initialized.</div>
+              <pre id="roadmap-output" class="report-box"></pre>
+            </article>
+
+            <article class="assist-card">
+              <h4>Plug-and-Play Equipment Matrix</h4>
+              <div class="form-actions">
+                <button type="button" id="equip-tier-lean">Lean Lab</button>
+                <button type="button" id="equip-tier-mid">Mid-Scale Center</button>
+                <button type="button" id="equip-tier-comprehensive">Comprehensive Center</button>
+                <button type="button" id="equip-refresh">Refresh Readiness</button>
+              </div>
+              <div id="equip-summary" class="detail-box">Select a tier to load recommended stack.</div>
+              <table class="data-table" id="equipment-table"></table>
+            </article>
+
+            <article class="assist-card">
+              <h4>Standards + Governance Completion</h4>
+              <div id="standards-checklist" class="switch-grid"></div>
+              <div class="form-actions">
+                <button type="button" id="standards-recommended">Apply Recommended Baseline</button>
+                <button type="button" id="standards-score">Compute Completion Score</button>
+              </div>
+              <div id="standards-summary" class="detail-box">Completion score pending.</div>
+            </article>
+
+            <article class="assist-card">
+              <h4>Procurement + Pilot Auto-Builder</h4>
+              <label for="pilot-focus">Pilot Focus</label>
+              <select id="pilot-focus">
+                <option value="NSCLC">NSCLC</option>
+                <option value="Pancreatic">Pancreatic</option>
+                <option value="Breast">Breast</option>
+                <option value="Alzheimer">Alzheimer</option>
+                <option value="Tuberculosis">Tuberculosis</option>
+              </select>
+              <div class="form-actions">
+                <button type="button" id="procure-build">Build Procurement Pack</button>
+                <button type="button" id="procure-export">Generate PI Brief</button>
+              </div>
+              <div id="procure-summary" class="detail-box">Procurement pack not generated.</div>
+              <pre id="procure-output" class="report-box"></pre>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel" data-view="goldsec" hidden>
+          <h3>Security Gold Standard Operations</h3>
+          <p class="muted">Do-now execution board for identity, attestation, supply chain, runtime, and SOC readiness.</p>
+
+          <div class="gold-grid">
+            <article class="assist-card">
+              <h4>Today Action Sprint</h4>
+              <div id="today-security-list" class="switch-grid"></div>
+              <div class="form-actions">
+                <button type="button" id="today-security-autofill">Auto-Apply Feasible Today</button>
+                <button type="button" id="today-security-score">Compute Today Score</button>
+              </div>
+              <div id="today-security-summary" class="detail-box">No today sprint actions applied.</div>
+            </article>
+
+            <article class="assist-card">
+              <h4>Control Scorecard</h4>
+              <div class="form-actions">
+                <button type="button" id="goldscore-refresh">Refresh Control Scorecard</button>
+                <button type="button" id="goldscore-hardening">Apply Hardening Auto-Tuner</button>
+              </div>
+              <div id="goldscore-summary" class="detail-box">Control scorecard not generated.</div>
+              <table class="data-table" id="goldscore-table"></table>
+            </article>
+
+            <article class="assist-card">
+              <h4>30 / 60 / 90 Security Roadmap</h4>
+              <div class="form-actions">
+                <button type="button" id="roadmap-30">Show 30-Day</button>
+                <button type="button" id="roadmap-60">Show 60-Day</button>
+                <button type="button" id="roadmap-90">Show 90-Day</button>
+              </div>
+              <div id="gold-roadmap-summary" class="detail-box">Security roadmap not initialized.</div>
+              <pre id="gold-roadmap-output" class="report-box"></pre>
+            </article>
+
+            <article class="assist-card">
+              <h4>Security SLO Tracker</h4>
+              <div class="form-actions">
+                <button type="button" id="slo-refresh">Refresh SLOs</button>
+                <button type="button" id="slo-escalate">Generate Escalation Pack</button>
+              </div>
+              <table class="data-table" id="slo-table"></table>
+              <pre id="slo-output" class="report-box"></pre>
+            </article>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <aside class="right-rail">
+      <h3>Audit Stream</h3>
+      <div class="log-stream" id="audit-log"></div>
+      <div class="quick-actions">
+        <button data-action="risk">Risk Assessment ↗</button>
+        <button data-action="dpia">GDPR DPIA ↗</button>
+        <button data-action="scc">Cross-border SCCs ↗</button>
+      </div>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

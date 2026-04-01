@@ -1,0 +1,75 @@
+name-template: "Beta $RESOLVED_VERSION"
+tag-template: "beta-$RESOLVED_VERSION"
+change-template: "- $TITLE (#$NUMBER) @$AUTHOR"
+change-title-escapes: "<*_&"
+
+categories:
+  - title: "Security Hardening"
+    labels:
+      - security
+      - hardening
+  - title: "Federated Learning Wrapper"
+    labels:
+      - fl
+      - flower
+      - wrapper
+  - title: "Compliance and Governance"
+    labels:
+      - compliance
+      - governance
+      - hipaa
+      - gdpr
+  - title: "Dashboard and Demo"
+    labels:
+      - dashboard
+      - ui
+      - pages
+  - title: "CI and Release Automation"
+    labels:
+      - ci
+      - release
+
+template: |
+  ## Beta Highlights
+
+  $CHANGES
+
+  ## Demo
+
+  - GitHub Pages: https://rwilliamspbg-ops.github.io/Sovereign_Mohawk_Oncology_Global/
+
+  ## Compliance Notes
+
+  - See docs/beta/COMPLIANCE_EVIDENCE.md for HIPAA/GDPR control mapping
+  - See docs/beta/BETA_RELEASE.md for beta evidence checklist
+
+version-resolver:
+  major:
+    labels:
+      - major
+  minor:
+    labels:
+      - minor
+      - feature
+  patch:
+    labels:
+      - patch
+      - fix
+  default: patch
+
+autolabeler:
+  - label: "security"
+    files:
+      - "flower_security_wrapper/security_wrapper/**"
+  - label: "ci"
+    files:
+      - ".github/workflows/**"
+  - label: "dashboard"
+    files:
+      - "index.html"
+      - "styles.css"
+      - "app.js"
+  - label: "compliance"
+    files:
+      - "docs/beta/**"
+      - "README.md"

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r flower_security_wrapper/requirements-dev.txt
+          pip install -e flower_security_wrapper
+
+      - name: Lint
+        run: ruff check flower_security_wrapper
+
+      - name: Run tests
+        run: |
+          pytest flower_security_wrapper/tests \
+            --junitxml=flower_security_wrapper/junit.xml \
+            --cov=flower_security_wrapper/security_wrapper \
+            --cov-report=xml:flower_security_wrapper/coverage.xml
+
+      - name: Build package
+        run: |
+          cd flower_security_wrapper
+          python -m build
+          twine check dist/*
+
+      - name: Upload CI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-artifacts
+          path: |
+            flower_security_wrapper/junit.xml
+            flower_security_wrapper/coverage.xml
+            flower_security_wrapper/dist/*
