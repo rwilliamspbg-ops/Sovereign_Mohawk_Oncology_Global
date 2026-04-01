@@ -129,6 +129,28 @@ body {
   color: var(--ink-muted);
 }
 
+.topbar-links {
+  margin-top: 10px;
+}
+
+.dashboard-badge {
+  display: inline-block;
+  border: 1px solid #1a1a1a;
+  border-radius: 999px;
+  background: #1a1a1a;
+  color: #fff;
+  text-decoration: none;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.dashboard-badge:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
 .eps-box {
   display: grid;
   gap: 8px;
@@ -609,5 +631,9 @@ body {
 
   .topbar {
     flex-direction: column;
+  }
+
+  .dashboard-badge {
+    width: fit-content;
   }
 }
