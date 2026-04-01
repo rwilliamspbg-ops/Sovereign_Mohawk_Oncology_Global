@@ -6,6 +6,9 @@ on:
     tags:
       - "beta-*"
 
+permissions:
+  contents: read
+
 jobs:
   capture:
     runs-on: ubuntu-latest

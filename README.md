@@ -1,5 +1,15 @@
 # Sovereign_Mohawk_Oncology_Global
 
+[![CI](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/ci.yml/badge.svg)](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/ci.yml)
+[![Pages](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/pages.yml/badge.svg)](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/pages.yml)
+[![Beta Artifacts](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/beta-artifacts.yml/badge.svg)](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/beta-artifacts.yml)
+[![Release Drafter](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/release-drafter.yml/badge.svg)](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/release-drafter.yml)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](flower_security_wrapper/pyproject.toml)
+[![Protocol: Flower FL](https://img.shields.io/badge/protocol-Flower%20FL-1f6feb)](flower_security_wrapper/README.md)
+[![Package: beta](https://img.shields.io/badge/package-0.1.0b1-orange)](flower_security_wrapper/pyproject.toml)
+[![Security Profile: HIPAA-GDPR](https://img.shields.io/badge/security-HIPAA%20%7C%20GDPR-0a7b83)](docs/beta/COMPLIANCE_EVIDENCE.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 a comprehensive healthcare app for cancer and disease research with full HIPAA/GDPR compliance mapping
 
 ## Local Run
@@ -66,6 +76,30 @@ Then open `http://localhost:8080` in your browser.
 
 - Runtime and metrics are simulated in-browser for demo/testing.
 - No PHI or external APIs are used in this prototype.
+
+## Contributing
+
+See the contributor guide: [CONTRIBUTING.md](CONTRIBUTING.md)
+
+### What you can do to contribute
+
+- Add tests for governance contract decisions, rejection taxonomy, and adversarial scenarios.
+- Improve attestation, nonce-store, and SIEM integration validation with more edge cases.
+- Enhance dashboard UX with accessibility improvements and clearer risk/compliance states.
+- Improve CI diagnostics and artifact quality checks for faster failure triage.
+- Expand docs with architecture diagrams and incident/beta release runbooks.
+
+### Ideas and current needs
+
+- Security hardening:
+  - Stronger poisoning detection heuristics and benchmark datasets.
+  - More TPM attestation parsing and verification fixtures.
+- Compliance automation:
+  - Additional HIPAA/GDPR evidence mappings and export templates.
+  - Better DPIA output quality and governance gate evidence capture.
+- Developer experience:
+  - More contributor-friendly examples for local simulation and testing.
+  - Faster local verification scripts and make-style task shortcuts.
 
 ## Flower Security Wrapper
 
