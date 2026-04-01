@@ -66,6 +66,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-pages
     if: needs.build-pages.outputs.pages_enabled == 'true'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
