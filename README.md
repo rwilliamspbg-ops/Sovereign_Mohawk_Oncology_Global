@@ -12,6 +12,13 @@
 
 a comprehensive healthcare app for cancer and disease research with full HIPAA/GDPR compliance mapping
 
+## Standout Capabilities
+
+- Flower Security Wrapper: policy-gated update admission for federated rounds with signed update checks and governance enforcement ([wrapper details](flower_security_wrapper/README.md)).
+- Compliance Mapping: direct evidence links for HIPAA and GDPR controls ([Compliance Evidence](docs/beta/COMPLIANCE_EVIDENCE.md), [Beta Release Plan](docs/beta/BETA_RELEASE.md)).
+- Interactive Dashboard: built-in 47-node global map simulation with click-through interactions across federated regions ([dashboard entry point](index.html)).
+- DPIA Generator: built-in GDPR impact assessment workflow with validation and draft report generation ([dashboard section in app](app.js), [compliance evidence](docs/beta/COMPLIANCE_EVIDENCE.md)).
+
 ## Oncology Use Case
 
 This platform supports multi-center oncology collaboration where hospitals can jointly improve models for early risk stratification, treatment response estimation, and trial cohort matching without sharing raw patient data.

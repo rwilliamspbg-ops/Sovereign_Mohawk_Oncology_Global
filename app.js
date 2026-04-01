@@ -134,6 +134,12 @@ nav.addEventListener("click", (event) => {
   renderSection(button.dataset.section);
 });
 
+document.querySelectorAll("[data-feature-nav]").forEach((button) => {
+  button.addEventListener("click", () => {
+    renderSection(button.dataset.featureNav);
+  });
+});
+
 const nodeMap = document.getElementById("node-map");
 const nodeDetail = document.getElementById("node-detail");
 regionNodes.forEach((region) => {
