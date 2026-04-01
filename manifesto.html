@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Genesis Manifesto | Sovereign Mohawk Ecosystem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-1: #f4f6ef;
+      --bg-2: #dbdfd0;
+      --ink: #15210f;
+      --ink-muted: #4d5b43;
+      --accent: #1e6f5c;
+      --accent-2: #d95d39;
+      --panel: rgba(249, 251, 244, 0.9);
+      --line: rgba(32, 53, 24, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      color: var(--ink);
+      background: linear-gradient(120deg, var(--bg-1), var(--bg-2));
+      min-height: 100vh;
+    }
+
+    .bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 8% 16%, rgba(217, 93, 57, 0.2), transparent 32%),
+        radial-gradient(circle at 86% 80%, rgba(30, 111, 92, 0.22), transparent 38%);
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 22px 16px 40px;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      backdrop-filter: blur(4px);
+      padding: 22px;
+      box-shadow: 0 10px 32px rgba(18, 30, 11, 0.08);
+    }
+
+    .eyebrow {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+    }
+
+    h1 {
+      margin: 8px 0 10px;
+      font-size: clamp(1.7rem, 4vw, 2.5rem);
+      line-height: 1.15;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0 0;
+      padding: 0;
+      list-style: none;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+    }
+
+    .meta li {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      padding: 6px 10px;
+    }
+
+    .actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      text-decoration: none;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      padding: 9px 12px;
+      font-weight: 600;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .grid {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 14px;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .card p {
+      margin: 8px 0 0;
+      color: var(--ink-muted);
+    }
+
+    .full {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      padding: 16px;
+    }
+
+    .full section {
+      padding: 10px 0;
+      border-top: 1px dashed var(--line);
+    }
+
+    .full section:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: var(--ink-muted);
+    }
+
+    p {
+      color: var(--ink-muted);
+      line-height: 1.6;
+    }
+
+    .signature {
+      margin-top: 8px;
+      border-top: 1px dashed var(--line);
+      padding-top: 10px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.86rem;
+    }
+
+    .signature a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <main class="wrap">
+    <header class="hero">
+      <span class="eyebrow">Sovereign Mohawk Proto</span>
+      <h1>The Genesis Manifesto: Sovereign Mohawk Ecosystem</h1>
+      <ul class="meta">
+        <li>Version 1.0</li>
+        <li>April 1, 2026</li>
+        <li>Status: Formalized for Global Node Onboarding</li>
+        <li>Last updated: April 1, 2026</li>
+      </ul>
+      <div class="actions">
+        <a class="btn primary" href="index.html">Open Platform Demo</a>
+        <a class="btn" href="docs/GENESIS_MANIFESTO.md">View Source Markdown</a>
+      </div>
+    </header>
+
+    <section class="grid" aria-label="Manifesto highlights">
+      <article class="card">
+        <h2>Data Sovereignty</h2>
+        <p>Keep patient data local while turning global insight into a shared clinical asset.</p>
+      </article>
+      <article class="card">
+        <h2>Privacy by Proof</h2>
+        <p>Formal verification, active privacy budgeting, and hardware attestation by design.</p>
+      </article>
+      <article class="card">
+        <h2>Green AI Operations</h2>
+        <p>Edge-first learning model targeting lower energy use, zero-water cooling, and lower e-waste.</p>
+      </article>
+    </section>
+
+    <article class="full">
+      <section>
+        <h3>I. The Declaration of Data Sovereignty</h3>
+        <p>The current paradigm of medical AI is broken. Global oncology breakthroughs are held hostage by data silos, privacy theater, and the exorbitant costs of centralized compute.</p>
+        <p>We believe that the cure for cancer should not be a trade secret of a single corporation, nor should it require the sacrifice of patient privacy.</p>
+        <p>The Sovereign Mohawk Ecosystem exists to build a planetary-scale, formally verified intelligence layer where data remains local, but insights become global.</p>
+      </section>
+
+      <section>
+        <h3>II. The Technical Covenant</h3>
+        <p>We commit to a standard of Privacy by Mathematical Proof, not just Privacy by Promise. Every node in the Mohawk network adheres to:</p>
+        <ul>
+          <li>Formal Verification: Sovereign-Mohawk-Proto is mathematically proven to prevent data leakage during aggregation.</li>
+          <li>Active Privacy Budgeting: Clinical-grade privacy budget with epsilon approximately 0.61.</li>
+          <li>Hardware Attestation: TPM quote acceptance to verify secure, untampered compute.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>III. The Sustainability Mandate</h3>
+        <p>Centralized AI is a resource parasite. Mohawk is built for the Green AI era. By shifting intelligence to the edge, we target:</p>
+        <ul>
+          <li>75% energy reduction through distributed local training.</li>
+          <li>Zero-water cooling through standard edge infrastructure.</li>
+          <li>E-waste mitigation with a 5-7 year Sovereign Node lifespan.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>IV. The MOHWK Economic Engine</h3>
+        <p>We reject speculative pump-and-dump cycles. The MOHWK token is designed as a Burn-and-Mint Equilibrium model:</p>
+        <ul>
+          <li>Work: Nodes provide verified oncology research to earn rewards.</li>
+          <li>Usage: Institutions burn MOHWK to access collective intelligence across the global map.</li>
+          <li>Governance: Token holders vote on protocol upgrades and DPIA compliance standards.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>V. The Call to Co-Founders</h3>
+        <ul>
+          <li>Universities: Secure your 100K grant to anchor the first 1,000 research sites.</li>
+          <li>Clinicians: Join the 47-node pilot and convert local data into global value.</li>
+          <li>Developers: Fork the Flower wrappers and build the next vertical in rare disease or neurology.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>Appendix: The Portfolio Evidence</h3>
+        <ul>
+          <li>Current Infrastructure: 47 live global nodes</li>
+          <li>Security Standard: Gold-Security 100% feasible controls</li>
+          <li>Compliance: Automated GDPR Art. 35 DPIA generation</li>
+        </ul>
+        <div class="signature">
+          Signed, The PBG Sovereign Mohawk Steering Committee<br />
+          <a href="https://github.com/rwilliamspbg-ops" target="_blank" rel="noopener noreferrer">rwilliamspbg-ops GitHub Portfolio</a>
+        </div>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

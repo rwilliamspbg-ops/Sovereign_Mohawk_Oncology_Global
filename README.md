@@ -9,13 +9,15 @@
 [![Package: beta](https://img.shields.io/badge/package-0.1.0b1-orange)](flower_security_wrapper/pyproject.toml)
 [![Security Profile: HIPAA-GDPR](https://img.shields.io/badge/security-HIPAA%20%7C%20GDPR-0a7b83)](docs/beta/COMPLIANCE_EVIDENCE.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Manifesto](https://img.shields.io/badge/Manifesto-Genesis%20v1.0-black)](docs/GENESIS_MANIFESTO.md)
+[![Manifesto](https://img.shields.io/badge/Manifesto-Genesis%20v1.0-black)](manifesto.html)
 
 a comprehensive healthcare app for cancer and disease research with full HIPAA/GDPR compliance mapping
 
 ## Pinned: Genesis Manifesto
 
-Read the formal onboarding document: [The Genesis Manifesto: Sovereign Mohawk Ecosystem](docs/GENESIS_MANIFESTO.md)
+Read the formal onboarding document: [The Genesis Manifesto: Sovereign Mohawk Ecosystem](manifesto.html)
+
+Source markdown: [docs/GENESIS_MANIFESTO.md](docs/GENESIS_MANIFESTO.md)
 
 Key references:
 
