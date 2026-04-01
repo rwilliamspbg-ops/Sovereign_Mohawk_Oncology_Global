@@ -12,6 +12,12 @@
 
 a comprehensive healthcare app for cancer and disease research with full HIPAA/GDPR compliance mapping
 
+## Oncology Use Case
+
+This platform supports multi-center oncology collaboration where hospitals can jointly improve models for early risk stratification, treatment response estimation, and trial cohort matching without sharing raw patient data.
+
+In this workflow, each site trains locally, submits signed updates through policy-gated federated rounds, and receives governance-audited global improvements. The goal is faster translational learning across institutions while preserving privacy and compliance boundaries.
+
 ## Local Run
 
 This repository now includes a standalone interactive dashboard:
