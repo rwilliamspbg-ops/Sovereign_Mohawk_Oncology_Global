@@ -19,6 +19,10 @@ const sections = {
     title: "Security",
     subtitle: "Layered defense model using TPM, signatures, DP, and zero-trust policy."
   },
+  wal: {
+    title: "WAL Ledger",
+    subtitle: "Append-only tamper-evident write-ahead logging with hash chaining and replay verification."
+  },
   consent: {
     title: "Consent Management",
     subtitle: "Patient study consent toggles and legal basis checkpoints."
@@ -822,6 +826,349 @@ function quickHash(value) {
   return hash.toString(16).padStart(8, "0");
 }
 
+const walEndpointInput = document.getElementById("wal-endpoint");
+const walPayloadInput = document.getElementById("wal-payload");
+const walStatus = document.getElementById("wal-status");
+const walTable = document.getElementById("wal-table");
+const walSnippet = document.getElementById("wal-snippet");
+const walRequireAck = document.getElementById("wal-require-ack");
+const walImportInput = document.getElementById("wal-import");
+const walReplayStatus = document.getElementById("wal-replay-status");
+const walReplayOutput = document.getElementById("wal-replay-output");
+const walState = {
+  entries: [],
+  term: 1,
+  commitIndex: 0
+};
+
+function canonicalJson(value) {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map((item) => canonicalJson(item)).join(",")}]`;
+  const keys = Object.keys(value).sort();
+  return `{${keys.map((k) => `${JSON.stringify(k)}:${canonicalJson(value[k])}`).join(",")}}`;
+}
+
+function hashHex(value) {
+  if (window.crypto && window.crypto.subtle && window.TextEncoder) {
+    const data = new window.TextEncoder().encode(value);
+    return window.crypto.subtle.digest("SHA-256", data).then((buffer) => {
+      const bytes = Array.from(new Uint8Array(buffer));
+      return bytes.map((b) => b.toString(16).padStart(2, "0")).join("");
+    });
+  }
+  const fallback = quickHash(value.repeat(4));
+  return Promise.resolve(fallback.repeat(8));
+}
+
+function renderWalSnippet() {
+  const endpoint = (walEndpointInput?.value || "/api/v1/wal/append").trim();
+  const payloadText = walPayloadInput?.value?.trim() || "{}";
+  const requireAck = walRequireAck?.checked ? "true" : "false";
+  walSnippet.textContent = [
+    "// Browser integration example",
+    `const endpoint = \"${endpoint}\";`,
+    "const payload = " + payloadText + ";",
+    "",
+    "const response = await fetch(endpoint, {",
+    "  method: \"POST\",",
+    "  headers: { \"Content-Type\": \"application/json\" },",
+    "  body: JSON.stringify(payload)",
+    "});",
+    "",
+    "if (!response.ok) throw new Error(\"WAL append failed\");",
+    "const result = await response.json();",
+    `if (${requireAck} && (!result.server_signature || !result.commit_index || !result.term)) {`,
+    "  throw new Error(\"Invalid WAL acknowledgment from backend\");",
+    "}",
+    "console.log(result);"
+  ].join("\n");
+}
+
+function renderWalTable() {
+  walTable.innerHTML = "<thead><tr><th>Idx</th><th>Term</th><th>Commit</th><th>Timestamp</th><th>Event</th><th>Checksum</th><th>Prev Hash</th><th>Entry Hash</th><th>Ack</th></tr></thead>";
+  const body = document.createElement("tbody");
+  walState.entries.slice().reverse().forEach((entry) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${entry.index}</td><td>${entry.term}</td><td>${entry.commitIndex}</td><td>${entry.timestamp}</td><td>${entry.event}</td><td>${entry.checksum.slice(0, 12)}...</td><td>${entry.prevHash.slice(0, 12)}...</td><td>${entry.entryHash.slice(0, 12)}...</td><td>${entry.ackSignature ? "signed" : "local"}</td>`;
+    body.appendChild(tr);
+  });
+  walTable.appendChild(body);
+}
+
+function parseWalPayload() {
+  const text = walPayloadInput.value.trim();
+  if (!text) return { event: "unspecified", detail: "empty payload" };
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("Payload must be a JSON object");
+    }
+    return parsed;
+  } catch (error) {
+    throw new Error(`Invalid JSON payload: ${error.message}`);
+  }
+}
+
+function setWalStatus(text) {
+  walStatus.textContent = text;
+}
+
+function setWalReplayStatus(text) {
+  walReplayStatus.textContent = text;
+}
+
+function parseWalImport() {
+  const text = walImportInput.value.trim();
+  if (!text) throw new Error("Replay input is empty.");
+  const parsed = JSON.parse(text);
+  if (!parsed || !Array.isArray(parsed.entries)) {
+    throw new Error("Replay input must contain an entries array.");
+  }
+  return parsed.entries;
+}
+
+function postWalToEndpoint(payload, entryMeta) {
+  const endpoint = walEndpointInput.value.trim();
+  if (!endpoint) {
+    return Promise.resolve({
+      term: walState.term,
+      commit_index: walState.commitIndex + 1,
+      server_signature: "local-sim-signature"
+    });
+  }
+
+  return fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ payload, entryMeta })
+  }).then((response) => {
+    if (!response.ok) throw new Error(`Endpoint returned ${response.status}`);
+    return response.json();
+  }).then((ack) => {
+    if (walRequireAck.checked) {
+      const valid = ack && ack.server_signature && Number.isFinite(Number(ack.commit_index)) && Number.isFinite(Number(ack.term));
+      if (!valid) throw new Error("Backend ack missing server_signature, commit_index, or term");
+    }
+    return ack;
+  }).catch((error) => {
+    if (walRequireAck.checked) throw error;
+    return {
+      term: walState.term,
+      commit_index: walState.commitIndex + 1,
+      server_signature: "local-fallback-signature",
+      warning: error.message
+    };
+  });
+}
+
+function appendWalEntry(payload, source = "manual") {
+  const prev = walState.entries[walState.entries.length - 1];
+  const prevHash = prev ? prev.entryHash : "GENESIS";
+  const timestamp = new Date().toISOString();
+  const event = payload.event || payload.type || payload.action || source;
+  const normalizedPayload = canonicalJson(payload);
+
+  return hashHex(normalizedPayload)
+    .then((checksum) => {
+      const body = `${walState.entries.length + 1}|${timestamp}|${event}|${prevHash}|${checksum}`;
+      return hashHex(body).then((entryHash) => ({ checksum, entryHash }));
+    })
+    .then(({ checksum, entryHash }) => {
+      const entryMeta = {
+        index: walState.entries.length + 1,
+        checksum,
+        prevHash,
+        entryHash,
+        event,
+        timestamp
+      };
+
+      return postWalToEndpoint(payload, entryMeta).then((ack) => ({ checksum, entryHash, ack }));
+    })
+    .then(({ checksum, entryHash, ack }) => {
+      const ackTerm = Number(ack?.term);
+      const ackCommit = Number(ack?.commit_index);
+      const term = Number.isFinite(ackTerm) ? ackTerm : walState.term;
+      const commitIndex = Number.isFinite(ackCommit) ? ackCommit : walState.commitIndex + 1;
+
+      walState.term = Math.max(walState.term, term);
+      walState.commitIndex = Math.max(walState.commitIndex, commitIndex);
+
+      const entry = {
+        index: walState.entries.length + 1,
+        term,
+        commitIndex,
+        timestamp,
+        event,
+        source,
+        payload,
+        checksum,
+        prevHash,
+        entryHash,
+        ackSignature: ack?.server_signature || "",
+        ackWarning: ack?.warning || ""
+      };
+      walState.entries.push(entry);
+      renderWalTable();
+      const ackNote = entry.ackWarning ? ` (fallback: ${entry.ackWarning})` : "";
+      setWalStatus(`Appended entry #${entry.index} term=${entry.term} commit=${entry.commitIndex} from ${source}.${ackNote}`);
+      appendLog(auditLog, `wal: appended idx=${entry.index} event=${event}`);
+    });
+}
+
+function verifyWalLedger() {
+  let chainValid = true;
+  const checks = walState.entries.map((entry, idx) => {
+    const expectedPrev = idx === 0 ? "GENESIS" : walState.entries[idx - 1].entryHash;
+    const payloadCanonical = canonicalJson(entry.payload);
+    return hashHex(payloadCanonical).then((checksum) => {
+      const body = `${entry.index}|${entry.timestamp}|${entry.event}|${entry.prevHash}|${checksum}`;
+      return hashHex(body).then((entryHash) => {
+        const termValid = Number.isFinite(Number(entry.term)) && Number(entry.term) >= 1;
+        const commitValid = Number.isFinite(Number(entry.commitIndex)) && Number(entry.commitIndex) >= Number(entry.index);
+        const localValid = entry.prevHash === expectedPrev && entry.checksum === checksum && entry.entryHash === entryHash && termValid && commitValid;
+        if (!localValid) chainValid = false;
+      });
+    });
+  });
+
+  return Promise.all(checks).then(() => {
+    if (!walState.entries.length) {
+      setWalStatus("Ledger verification: no entries yet.");
+      return;
+    }
+    if (chainValid) {
+      setWalStatus(`Ledger verification passed for ${walState.entries.length} entries.`);
+      appendLog(auditLog, "wal: chain verification passed");
+      return;
+    }
+    setWalStatus("Ledger verification FAILED: tamper or ordering mismatch detected.");
+    appendLog(auditLog, "wal: chain verification failed");
+  });
+}
+
+function exportWalLedger() {
+  const exportPayload = {
+    exportedAt: new Date().toISOString(),
+    endpoint: walEndpointInput.value.trim(),
+    term: walState.term,
+    commitIndex: walState.commitIndex,
+    entries: walState.entries
+  };
+  const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "wal_ledger_export.json";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  setWalStatus(`Ledger export created with ${walState.entries.length} entries.`);
+}
+
+function loadWalSampleEntry() {
+  walPayloadInput.value = JSON.stringify({
+    event: "execution_finish",
+    trace_id: `trace-${Date.now().toString().slice(-6)}`,
+    model: modelRegistry[0]?.modelName || "pending-model",
+    node: "eu-04",
+    status: "pass",
+    policy_version: "rare_disease.v1",
+    timestamp_utc: new Date().toISOString()
+  }, null, 2);
+  renderWalSnippet();
+  setWalStatus("Sample payload loaded for append.");
+}
+
+function appendWalEntryFromPlatform(event, data) {
+  if (!walTable) return;
+  const payload = {
+    event,
+    data,
+    source: "platform"
+  };
+  appendWalEntry(payload, "platform").catch((error) => {
+    setWalStatus(`Auto-append failed: ${error.message}`);
+  });
+}
+
+function replayWalEntries(entries) {
+  if (!entries.length) {
+    setWalReplayStatus("Replay input has no entries.");
+    walReplayOutput.textContent = "";
+    return;
+  }
+
+  const result = {
+    eventsByType: {},
+    latestTraceByNode: {},
+    lastCommitIndex: 0,
+    lastTerm: 1,
+    total: entries.length
+  };
+
+  entries.forEach((entry) => {
+    const eventName = entry.event || "unknown";
+    result.eventsByType[eventName] = (result.eventsByType[eventName] || 0) + 1;
+
+    const node = entry.payload?.node || entry.payload?.data?.node || "global";
+    const trace = entry.payload?.trace_id || entry.payload?.data?.trace_id || "n/a";
+    result.latestTraceByNode[node] = trace;
+
+    result.lastCommitIndex = Math.max(result.lastCommitIndex, Number(entry.commitIndex || 0));
+    result.lastTerm = Math.max(result.lastTerm, Number(entry.term || 1));
+  });
+
+  walReplayOutput.textContent = JSON.stringify(result, null, 2);
+  setWalReplayStatus(`Replay complete for ${entries.length} entries. Last term=${result.lastTerm}, commit=${result.lastCommitIndex}.`);
+}
+
+document.getElementById("wal-sample").addEventListener("click", loadWalSampleEntry);
+document.getElementById("wal-append").addEventListener("click", () => {
+  let payload;
+  try {
+    payload = parseWalPayload();
+  } catch (error) {
+    setWalStatus(error.message);
+    return;
+  }
+
+  appendWalEntry(payload, "manual").catch((error) => {
+    setWalStatus(`Append failed: ${error.message}`);
+  });
+});
+document.getElementById("wal-verify").addEventListener("click", () => {
+  verifyWalLedger().catch((error) => {
+    setWalStatus(`Verification failed: ${error.message}`);
+  });
+});
+document.getElementById("wal-export").addEventListener("click", exportWalLedger);
+document.getElementById("wal-reset").addEventListener("click", () => {
+  walState.entries = [];
+  walState.term = 1;
+  walState.commitIndex = 0;
+  renderWalTable();
+  setWalStatus("Ledger reset complete.");
+  walReplayOutput.textContent = "";
+  setWalReplayStatus("No replay executed yet.");
+  appendLog(auditLog, "wal: ledger reset");
+});
+document.getElementById("wal-replay").addEventListener("click", () => {
+  try {
+    const entries = parseWalImport();
+    replayWalEntries(entries);
+  } catch (error) {
+    setWalReplayStatus(`Replay failed: ${error.message}`);
+  }
+});
+
+walEndpointInput.addEventListener("input", renderWalSnippet);
+walPayloadInput.addEventListener("input", renderWalSnippet);
+walRequireAck.addEventListener("input", renderWalSnippet);
+
 function addAuditEntry(event, model, result, details) {
   llmAuditRows.unshift({
     time: new Date().toISOString().slice(11, 19),
@@ -832,6 +1179,7 @@ function addAuditEntry(event, model, result, details) {
   });
   if (llmAuditRows.length > 12) llmAuditRows.pop();
   renderLlmAuditTable();
+  appendWalEntryFromPlatform(event, { model, result, details });
 }
 
 document.getElementById("audit-simulate").addEventListener("click", () => {
@@ -1554,6 +1902,8 @@ renderSecurityRoadmap("day30");
 renderSloTable();
 
 renderDpiaForm();
+renderWalTable();
+renderWalSnippet();
 renderSection("dashboard");
 appendLog(runtimeLog, "runtime initialized: waiting for next FL round tick");
 appendLog(auditLog, "audit initialized: compliance monitor online");

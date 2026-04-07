@@ -12,6 +12,7 @@ This package adds a policy enforcement layer around a Flower-like strategy.
 - Payload size limits
 - Gradient poisoning detection using z-score and consensus checks (cosine + Krum-style)
 - Structured audit logging for accepted/rejected updates
+- Hash-chained WAL ledger with CRC integrity checks and replay support
 - Smart-contract-style governance gate evaluation (automated, no synchronous reviewer bottleneck)
 - Automatic slashing and quarantine for malicious or policy-violating clients
 - Optional SIEM webhook forwarding and repeated-strike alert events
@@ -29,6 +30,7 @@ This package adds a policy enforcement layer around a Flower-like strategy.
 - `security_wrapper/policy.py`: Policy model and loader
 - `security_wrapper/governance_contract.py`: Governance gate contract + slashing ledger
 - `security_wrapper/audit.py`: JSONL audit logger
+- `security_wrapper/wal_ledger.py`: Append-only write-ahead ledger with tamper checks
 - `security_wrapper/rejection_codes.py`: Rejection taxonomy
 - `policy.example.json`: Example policy
 - `policy.rare_disease.json`: Rare-disease-first profile (stricter DP + faster quarantine)

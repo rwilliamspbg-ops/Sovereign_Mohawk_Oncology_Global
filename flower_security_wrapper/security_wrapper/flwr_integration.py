@@ -23,7 +23,9 @@ class SecurityFedAvgStrategy(SecurityWrapperStrategy):
             raise ImportError("flwr is required to use SecurityFedAvgStrategy") from exc
 
         inner_strategy = FedAvg(**fedavg_kwargs)
-        super().__init__(inner_strategy=inner_strategy, policy=policy, audit_logger=audit_logger)
+        super().__init__(
+            inner_strategy=inner_strategy, policy=policy, audit_logger=audit_logger
+        )
 
 
 def build_secure_fedavg(
@@ -33,4 +35,6 @@ def build_secure_fedavg(
 ) -> SecurityFedAvgStrategy:
     policy = load_policy_from_json(policy_path)
     audit_logger = AuditLogger(audit_path)
-    return SecurityFedAvgStrategy(policy=policy, audit_logger=audit_logger, **fedavg_kwargs)
+    return SecurityFedAvgStrategy(
+        policy=policy, audit_logger=audit_logger, **fedavg_kwargs
+    )

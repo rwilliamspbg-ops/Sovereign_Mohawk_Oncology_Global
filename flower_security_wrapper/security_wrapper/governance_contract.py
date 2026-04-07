@@ -53,10 +53,14 @@ class GovernanceGateContract:
             self.strikes[client_id] = 0
             self.quarantined[client_id] = False
 
-    def evaluate(self, client_id: str, metrics: Dict[str, object], dp_limit: float) -> GovernanceDecision:
+    def evaluate(
+        self, client_id: str, metrics: Dict[str, object], dp_limit: float
+    ) -> GovernanceDecision:
         self._ensure_client(client_id)
         if self.quarantined.get(client_id, False):
-            return GovernanceDecision(False, "client_quarantined", {"client_quarantined": True})
+            return GovernanceDecision(
+                False, "client_quarantined", {"client_quarantined": True}
+            )
 
         gates: Dict[str, bool] = {
             "irb_approved": bool(metrics.get("irb_approved", False)),
@@ -75,7 +79,9 @@ class GovernanceGateContract:
 
         return GovernanceDecision(True, "accepted", gates)
 
-    def slash(self, client_id: str, rejection_code: RejectionCode) -> Dict[str, int | bool]:
+    def slash(
+        self, client_id: str, rejection_code: RejectionCode
+    ) -> Dict[str, int | bool]:
         self._ensure_client(client_id)
         reason = rejection_code.value
         penalty = self.slash_amounts.get(reason, 5)

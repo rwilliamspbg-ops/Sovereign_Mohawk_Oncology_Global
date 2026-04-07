@@ -11,7 +11,9 @@ class TestPoisoningDetectors(unittest.TestCase):
             "c": [0.09, 0.1, 0.1],
             "mal": [10.0, -10.0, 8.0],
         }
-        poisoned = detect_poisoned_clients(vectors, min_cosine_similarity=0.2, max_krum_score=2.0)
+        poisoned = detect_poisoned_clients(
+            vectors, min_cosine_similarity=0.2, max_krum_score=2.0
+        )
         self.assertIn("mal", poisoned)
 
 

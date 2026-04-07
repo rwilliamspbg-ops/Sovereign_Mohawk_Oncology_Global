@@ -24,6 +24,7 @@
         <button class="nav-item" data-section="pipeline">FL Pipeline</button>
         <button class="nav-item" data-section="compliance">HIPAA / GDPR</button>
         <button class="nav-item" data-section="security">Security</button>
+        <button class="nav-item" data-section="wal">WAL Ledger</button>
         <button class="nav-item" data-section="consent">Consent Mgmt</button>
         <button class="nav-item" data-section="metrics">Prometheus Metrics</button>
         <button class="nav-item" data-section="dpia">DPIA Generator</button>
@@ -71,6 +72,13 @@
           <h3>Policy-gated update admission</h3>
           <p>Each federated round validates signed updates against governance policy before aggregation.</p>
           <button class="feature-action" data-feature-nav="pipeline">Open FL Pipeline</button>
+        </article>
+
+        <article class="feature-item compact">
+          <span class="feature-kicker">Tamper-Evident Audit</span>
+          <h3>Hash-chained WAL integration</h3>
+          <p>Append, verify, and export a CockroachDB/etcd-style write-ahead log stream for audit replay.</p>
+          <button class="feature-action" data-feature-nav="wal">Open WAL Ledger</button>
         </article>
 
         <article class="feature-item">
@@ -149,6 +157,50 @@
         <section class="panel" data-view="security" hidden>
           <h3>Security Architecture</h3>
           <div class="card-grid" id="security-cards"></div>
+        </section>
+
+        <section class="panel" data-view="wal" hidden>
+          <h3>WAL Ledger Integration</h3>
+          <p class="muted">CockroachDB/etcd-style append-only ledger simulation with hash chaining, replay validation, and endpoint wiring guidance.</p>
+
+          <div class="wal-grid">
+            <article class="wal-card">
+              <h4>Integration Controls</h4>
+              <label for="wal-endpoint">WAL Endpoint</label>
+              <input id="wal-endpoint" type="text" value="/api/v1/wal/append" />
+              <label class="wal-inline-toggle"><input id="wal-require-ack" type="checkbox" checked /> Require backend signed acknowledgment</label>
+
+              <label for="wal-payload">Entry Payload (JSON)</label>
+              <textarea id="wal-payload" rows="8" placeholder='{"event":"execution_finish","trace_id":"trace-12345","node":"eu-04","status":"pass"}'></textarea>
+
+              <div class="form-actions">
+                <button type="button" id="wal-sample">Load Sample Entry</button>
+                <button type="button" id="wal-append">Append Entry</button>
+                <button type="button" id="wal-verify">Verify Ledger</button>
+                <button type="button" id="wal-export">Export JSON</button>
+                <button type="button" id="wal-reset">Reset</button>
+              </div>
+              <div id="wal-status" class="detail-box">Ledger not initialized.</div>
+            </article>
+
+            <article class="wal-card">
+              <h4>Client Integration Snippet</h4>
+              <pre id="wal-snippet" class="report-box"></pre>
+            </article>
+
+            <article class="wal-card">
+              <h4>Replay From Export</h4>
+              <label for="wal-import">Import WAL JSON</label>
+              <textarea id="wal-import" rows="8" placeholder='{"entries":[{"index":1,"term":1,"commitIndex":1,"event":"execution_finish", "payload":{}, "checksum":"...", "prevHash":"GENESIS", "entryHash":"..."}]}'></textarea>
+              <div class="form-actions">
+                <button type="button" id="wal-replay">Replay Imported Ledger</button>
+              </div>
+              <div id="wal-replay-status" class="detail-box">No replay executed yet.</div>
+              <pre id="wal-replay-output" class="report-box"></pre>
+            </article>
+          </div>
+
+          <table class="data-table" id="wal-table"></table>
         </section>
 
         <section class="panel" data-view="consent" hidden>

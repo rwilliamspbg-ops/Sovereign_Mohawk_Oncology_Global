@@ -39,7 +39,9 @@ class TestSiemForwarding(unittest.TestCase):
         thread.start()
 
         try:
-            forwarder = WebhookSiemForwarder(endpoint=f"http://127.0.0.1:{port}/siem/events", timeout_seconds=2)
+            forwarder = WebhookSiemForwarder(
+                endpoint=f"http://127.0.0.1:{port}/siem/events", timeout_seconds=2
+            )
             logger = AuditLogger("/tmp/test_security_audit.jsonl", forwarder=forwarder)
             logger.log("siem_test", {"k": "v"})
             time.sleep(0.1)

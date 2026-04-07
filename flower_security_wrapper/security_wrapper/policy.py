@@ -82,12 +82,16 @@ def load_policy_from_json(path: str) -> SecurityPolicy:
         try:
             parsed = json.loads(raw)
             if isinstance(parsed, dict):
-                data["attestation_public_keys"] = {str(k): str(v) for k, v in parsed.items()}
+                data["attestation_public_keys"] = {
+                    str(k): str(v) for k, v in parsed.items()
+                }
         except json.JSONDecodeError:
             pass
 
     siem_env = str(data.get("siem_webhook_url_env", "")).strip()
     if siem_env:
-        data["siem_webhook_url"] = os.getenv(siem_env, str(data.get("siem_webhook_url", "")))
+        data["siem_webhook_url"] = os.getenv(
+            siem_env, str(data.get("siem_webhook_url", ""))
+        )
 
     return SecurityPolicy(**data)

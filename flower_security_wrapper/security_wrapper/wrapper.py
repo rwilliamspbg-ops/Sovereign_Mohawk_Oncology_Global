@@ -5,7 +5,13 @@ from .attestation import AttestationVerifier
 from .checks import evaluate_update
 from .crypto import Ed25519Verifier
 from .governance_contract import GovernanceGateContract
-from .nonce_store import InMemoryNonceStore, NonceStore, PostgresNonceStore, RedisNonceStore, SqliteNonceStore
+from .nonce_store import (
+    InMemoryNonceStore,
+    NonceStore,
+    PostgresNonceStore,
+    RedisNonceStore,
+    SqliteNonceStore,
+)
 from .policy import SecurityPolicy
 from .poisoning import detect_poisoned_clients
 from .rejection_codes import RejectionCode
@@ -36,7 +42,9 @@ class SecurityWrapperStrategy:
             endpoint=self.policy.siem_webhook_url or None,
             timeout_seconds=self.policy.siem_timeout_seconds,
         )
-        self.audit = audit_logger or AuditLogger("security_audit.jsonl", forwarder=self.siem_forwarder)
+        self.audit = audit_logger or AuditLogger(
+            "security_audit.jsonl", forwarder=self.siem_forwarder
+        )
         self.seen_round_nonces: Set[Tuple[int, str]] = set()
         if nonce_store is not None:
             self.nonce_store = nonce_store
@@ -88,7 +96,11 @@ class SecurityWrapperStrategy:
                 metrics = dict(getattr(fit_res, "metrics", {}) or {})
                 client_id = str(metrics.get("client_id", "unknown"))
                 vec = metrics.get("gradient_vector")
-                if isinstance(vec, list) and vec and all(isinstance(x, (int, float)) for x in vec):
+                if (
+                    isinstance(vec, list)
+                    and vec
+                    and all(isinstance(x, (int, float)) for x in vec)
+                ):
                     vectors[client_id] = [float(x) for x in vec]
 
             poisoned_clients = detect_poisoned_clients(
@@ -102,7 +114,9 @@ class SecurityWrapperStrategy:
             client_id = str(metrics.get("client_id", "unknown"))
 
             if client_id in poisoned_clients:
-                slash_state = self.governance_contract.slash(client_id, RejectionCode.POISONING_ANOMALY)
+                slash_state = self.governance_contract.slash(
+                    client_id, RejectionCode.POISONING_ANOMALY
+                )
                 self.audit.log(
                     "update_rejected_poisoning",
                     {
@@ -123,7 +137,9 @@ class SecurityWrapperStrategy:
                     dp_limit=self.policy.max_epsilon_spent_per_round,
                 )
                 if not governance_decision.accepted:
-                    slash_state = self.governance_contract.slash(client_id, RejectionCode.POLICY_ERROR)
+                    slash_state = self.governance_contract.slash(
+                        client_id, RejectionCode.POLICY_ERROR
+                    )
                     self.audit.log(
                         "update_rejected_governance",
                         {

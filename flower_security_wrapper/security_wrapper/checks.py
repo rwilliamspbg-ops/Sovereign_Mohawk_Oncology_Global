@@ -7,14 +7,18 @@ from .policy import SecurityPolicy
 from .rejection_codes import RejectionCode
 
 
-def check_required_metrics(metrics: Dict[str, Any], policy: SecurityPolicy) -> Optional[RejectionCode]:
+def check_required_metrics(
+    metrics: Dict[str, Any], policy: SecurityPolicy
+) -> Optional[RejectionCode]:
     for key in policy.required_metrics:
         if key not in metrics:
             return RejectionCode.MISSING_REQUIRED_METRIC
     return None
 
 
-def check_client_allowlist(metrics: Dict[str, Any], policy: SecurityPolicy) -> Optional[RejectionCode]:
+def check_client_allowlist(
+    metrics: Dict[str, Any], policy: SecurityPolicy
+) -> Optional[RejectionCode]:
     if not policy.allowed_client_ids:
         return None
     if str(metrics.get("client_id")) not in policy.allowed_client_ids:
@@ -43,13 +47,28 @@ def check_signature(
     nonce = str(metrics.get("nonce", ""))
     payload_hash = str(metrics.get("payload_hash", ""))
     signature_hex = str(metrics.get("signature_hex", ""))
-    public_key_hex = policy.client_public_keys.get(client_id) or str(metrics.get("public_key_hex", ""))
+    public_key_hex = policy.client_public_keys.get(client_id) or str(
+        metrics.get("public_key_hex", "")
+    )
 
-    if not client_id or not nonce or not payload_hash or not signature_hex or not public_key_hex:
+    if (
+        not client_id
+        or not nonce
+        or not payload_hash
+        or not signature_hex
+        or not public_key_hex
+    ):
         return RejectionCode.SIGNATURE_INVALID
 
-    message = build_signature_message(client_id=client_id, server_round=server_round, nonce=nonce, payload_hash=payload_hash)
-    if not verifier.verify_hex(public_key_hex=public_key_hex, message=message, signature_hex=signature_hex):
+    message = build_signature_message(
+        client_id=client_id,
+        server_round=server_round,
+        nonce=nonce,
+        payload_hash=payload_hash,
+    )
+    if not verifier.verify_hex(
+        public_key_hex=public_key_hex, message=message, signature_hex=signature_hex
+    ):
         return RejectionCode.SIGNATURE_INVALID
     return None
 
@@ -63,7 +82,9 @@ def check_attestation(
         return None
     client_id = str(metrics.get("client_id", ""))
     pubkey = policy.attestation_public_keys.get(client_id)
-    if not verifier.verify(metrics=metrics, client_id=client_id, attestation_public_key_hex=pubkey):
+    if not verifier.verify(
+        metrics=metrics, client_id=client_id, attestation_public_key_hex=pubkey
+    ):
         return RejectionCode.ATTESTATION_FAILED
     return None
 
@@ -91,7 +112,9 @@ def check_nonce_replay(
     return None
 
 
-def check_poisoning_anomaly(metrics: Dict[str, Any], policy: SecurityPolicy) -> Optional[RejectionCode]:
+def check_poisoning_anomaly(
+    metrics: Dict[str, Any], policy: SecurityPolicy
+) -> Optional[RejectionCode]:
     try:
         z = float(metrics.get("gradient_zscore", 0.0))
     except (TypeError, ValueError):
@@ -101,7 +124,9 @@ def check_poisoning_anomaly(metrics: Dict[str, Any], policy: SecurityPolicy) -> 
     return None
 
 
-def check_dp_budget(metrics: Dict[str, Any], policy: SecurityPolicy) -> Optional[RejectionCode]:
+def check_dp_budget(
+    metrics: Dict[str, Any], policy: SecurityPolicy
+) -> Optional[RejectionCode]:
     try:
         epsilon = float(metrics.get("epsilon_spent", 999))
     except (TypeError, ValueError):
@@ -111,9 +136,13 @@ def check_dp_budget(metrics: Dict[str, Any], policy: SecurityPolicy) -> Optional
     return None
 
 
-def check_payload_size(metrics: Dict[str, Any], policy: SecurityPolicy) -> Optional[RejectionCode]:
+def check_payload_size(
+    metrics: Dict[str, Any], policy: SecurityPolicy
+) -> Optional[RejectionCode]:
     try:
-        payload_size = int(metrics.get("payload_size_bytes", policy.max_payload_bytes + 1))
+        payload_size = int(
+            metrics.get("payload_size_bytes", policy.max_payload_bytes + 1)
+        )
     except (TypeError, ValueError):
         return RejectionCode.PAYLOAD_TOO_LARGE
     if payload_size > policy.max_payload_bytes:
@@ -131,7 +160,9 @@ def evaluate_update(
     nonce_store: Optional[NonceStore] = None,
 ) -> Tuple[bool, Optional[RejectionCode]]:
     verifier = verifier or Ed25519Verifier()
-    attestation_verifier = attestation_verifier or AttestationVerifier(mode=policy.attestation_mode, max_age_seconds=policy.attestation_max_age_seconds)
+    attestation_verifier = attestation_verifier or AttestationVerifier(
+        mode=policy.attestation_mode, max_age_seconds=policy.attestation_max_age_seconds
+    )
 
     checks = [
         check_required_metrics,
@@ -150,11 +181,15 @@ def evaluate_update(
     if attestation_code is not None:
         return False, attestation_code
 
-    signature_code = check_signature(metrics, policy, server_round=server_round, verifier=verifier)
+    signature_code = check_signature(
+        metrics, policy, server_round=server_round, verifier=verifier
+    )
     if signature_code is not None:
         return False, signature_code
 
-    nonce_code = check_nonce_replay(metrics, policy, seen_round_nonces, server_round, nonce_store=nonce_store)
+    nonce_code = check_nonce_replay(
+        metrics, policy, seen_round_nonces, server_round, nonce_store=nonce_store
+    )
     if nonce_code is not None:
         return False, nonce_code
 

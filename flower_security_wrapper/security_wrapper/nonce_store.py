@@ -32,15 +32,13 @@ class SqliteNonceStore(NonceStore):
 
     def _init_db(self) -> None:
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute(
-                """
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS seen_nonces (
                     server_round INTEGER NOT NULL,
                     nonce TEXT NOT NULL,
                     PRIMARY KEY (server_round, nonce)
                 )
-                """
-            )
+                """)
             conn.commit()
 
     def seen(self, server_round: int, nonce: str) -> bool:
@@ -61,7 +59,9 @@ class SqliteNonceStore(NonceStore):
 
 
 class RedisNonceStore(NonceStore):
-    def __init__(self, redis_url: str = "redis://localhost:6379/0", key_prefix: str = "nonce") -> None:
+    def __init__(
+        self, redis_url: str = "redis://localhost:6379/0", key_prefix: str = "nonce"
+    ) -> None:
         try:
             import redis  # type: ignore
         except ImportError as exc:
@@ -85,7 +85,9 @@ class PostgresNonceStore(NonceStore):
         try:
             import psycopg  # type: ignore
         except ImportError as exc:
-            raise RuntimeError("psycopg package is required for PostgresNonceStore") from exc
+            raise RuntimeError(
+                "psycopg package is required for PostgresNonceStore"
+            ) from exc
 
         self._psycopg = psycopg
         self.dsn = dsn
@@ -95,15 +97,13 @@ class PostgresNonceStore(NonceStore):
     def _init_db(self) -> None:
         with self._psycopg.connect(self.dsn) as conn:
             with conn.cursor() as cur:
-                cur.execute(
-                    f"""
+                cur.execute(f"""
                     CREATE TABLE IF NOT EXISTS {self.table_name} (
                         server_round INTEGER NOT NULL,
                         nonce TEXT NOT NULL,
                         PRIMARY KEY (server_round, nonce)
                     )
-                    """
-                )
+                    """)
             conn.commit()
 
     def seen(self, server_round: int, nonce: str) -> bool:

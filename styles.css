@@ -555,6 +555,53 @@ body {
   gap: 8px;
 }
 
+.wal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.wal-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbfcf7;
+  padding: 10px;
+}
+
+.wal-card h4 {
+  margin-top: 0;
+}
+
+.wal-card label {
+  font-size: 0.88rem;
+  color: var(--ink-muted);
+}
+
+.wal-card input,
+.wal-card textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  font: inherit;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.wal-inline-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.86rem;
+  margin: 2px 0 8px;
+}
+
+.wal-inline-toggle input {
+  width: auto;
+  margin: 0;
+}
+
 .assist-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

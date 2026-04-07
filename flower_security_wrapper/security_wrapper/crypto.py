@@ -6,7 +6,9 @@ class Ed25519Verifier:
 
     def __init__(self) -> None:
         try:
-            from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+            from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+                Ed25519PublicKey,
+            )
         except ImportError:
             self._public_key_cls = None
         else:
@@ -16,7 +18,9 @@ class Ed25519Verifier:
     def available(self) -> bool:
         return self._public_key_cls is not None
 
-    def verify_hex(self, public_key_hex: str, message: bytes, signature_hex: str) -> bool:
+    def verify_hex(
+        self, public_key_hex: str, message: bytes, signature_hex: str
+    ) -> bool:
         if not self.available:
             return False
         try:

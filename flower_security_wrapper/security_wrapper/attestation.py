@@ -26,7 +26,9 @@ class AttestationVerifier:
         self.require_nonce_binding = require_nonce_binding
         self.signature_verifier = Ed25519Verifier()
 
-    def _parse_and_validate_tpm_quote(self, quote_json: str, client_id: str, round_nonce: str) -> bool:
+    def _parse_and_validate_tpm_quote(
+        self, quote_json: str, client_id: str, round_nonce: str
+    ) -> bool:
         try:
             parsed = json.loads(quote_json)
             ts = int(parsed.get("quote_ts", 0))
@@ -42,7 +44,9 @@ class AttestationVerifier:
             return False
         if abs(int(time.time()) - ts) > self.max_age_seconds:
             return False
-        if self.require_nonce_binding and (not quote_nonce or quote_nonce != round_nonce):
+        if self.require_nonce_binding and (
+            not quote_nonce or quote_nonce != round_nonce
+        ):
             return False
 
         for pcr_idx, expected_value in self.expected_pcrs.items():
@@ -50,7 +54,12 @@ class AttestationVerifier:
                 return False
         return True
 
-    def verify(self, metrics: Dict[str, object], client_id: str, attestation_public_key_hex: str | None = None) -> bool:
+    def verify(
+        self,
+        metrics: Dict[str, object],
+        client_id: str,
+        attestation_public_key_hex: str | None = None,
+    ) -> bool:
         if self.mode == "metric_flag":
             return bool(metrics.get("attestation_ok", False))
 
@@ -59,7 +68,9 @@ class AttestationVerifier:
 
         quote_json = str(metrics.get("attestation_quote_json", ""))
         sig_hex = str(metrics.get("attestation_signature_hex", ""))
-        key_hex = attestation_public_key_hex or str(metrics.get("attestation_public_key_hex", ""))
+        key_hex = attestation_public_key_hex or str(
+            metrics.get("attestation_public_key_hex", "")
+        )
         round_nonce = str(metrics.get("nonce", ""))
 
         if not quote_json or not sig_hex or not key_hex:
