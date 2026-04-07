@@ -1,6 +1,13 @@
 # Flower Security Wrapper
 
 This package adds a policy enforcement layer around a Flower-like strategy.
+It is the backend security and governance component of the full-stack Sovereign MOHAWK platform.
+
+Related full-stack surfaces:
+
+- Dashboard application: `../index.html`
+- Frontend orchestration and WAL controls: `../app.js`
+- Compliance and beta evidence docs: `../docs/beta/COMPLIANCE_EVIDENCE.md`
 
 ## What it enforces
 

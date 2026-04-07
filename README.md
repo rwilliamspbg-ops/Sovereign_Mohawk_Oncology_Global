@@ -5,13 +5,23 @@
 [![Beta Artifacts](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/beta-artifacts.yml/badge.svg)](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/beta-artifacts.yml)
 [![Release Drafter](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/release-drafter.yml/badge.svg)](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/release-drafter.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](flower_security_wrapper/pyproject.toml)
+[![Stack: Full](https://img.shields.io/badge/stack-HTML%2FCSS%2FJS%20%2B%20Python%203.12-1f6feb)](README.md)
 [![Protocol: Flower FL](https://img.shields.io/badge/protocol-Flower%20FL-1f6feb)](flower_security_wrapper/README.md)
 [![Package: beta](https://img.shields.io/badge/package-0.1.0b1-orange)](flower_security_wrapper/pyproject.toml)
 [![Security Profile: HIPAA-GDPR](https://img.shields.io/badge/security-HIPAA%20%7C%20GDPR-0a7b83)](docs/beta/COMPLIANCE_EVIDENCE.md)
+[![Ledger: WAL](https://img.shields.io/badge/ledger-hash--chained%20WAL-0a7b83)](flower_security_wrapper/security_wrapper/wal_ledger.py)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Manifesto](https://img.shields.io/badge/Manifesto-Genesis%20v1.0-black)](manifesto.html)
 
 a comprehensive healthcare app for cancer and disease research with full HIPAA/GDPR compliance mapping
+
+## Full-Stack Scope
+
+This repository is a full-stack platform spanning frontend operations UX and backend federated security enforcement:
+
+- Frontend layer: interactive browser dashboard in `index.html`, `styles.css`, and `app.js` with workflow modules for trials, compliance, metrics, governance, and WAL simulation.
+- Backend security layer: Python Flower security wrapper in `flower_security_wrapper/security_wrapper` covering policy checks, attestation, signature controls, slashing logic, SIEM forwarding, and WAL persistence.
+- Verification layer: CI/workflow-driven lint, tests, artifact capture, and beta compliance evidence under `docs/beta`.
 
 ## Pinned: Genesis Manifesto
 
@@ -81,6 +91,10 @@ Then open `http://localhost:8080` in your browser.
   - Governance gate checklist with readiness evaluation
   - Execution audit viewer with simulated trace events
   - Helper buttons and auto-tuners for safer defaults and control tuning
+- WAL Ledger Integration:
+  - CockroachDB/etcd-style append-only, hash-chained WAL controls in dashboard UI
+  - Signed-ack integration mode, term/commit metadata, verification, export, and replay views
+  - Linked backend implementation in `flower_security_wrapper/security_wrapper/wal_ledger.py`
 - Assistance Agent + Threat Analysis:
   - Assistance agent mode switcher for research planning, protocol review, and compliance review
   - Smart helper prompt loader and automated review packet generator
