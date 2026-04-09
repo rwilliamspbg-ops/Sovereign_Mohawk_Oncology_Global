@@ -1,15 +1,15 @@
 :root {
   --bg-1: #f4f6ef;
   --bg-2: #dbdfd0;
-  --ink: #15210f;
-  --ink-muted: #4d5b43;
-  --accent: #1e6f5c;
-  --accent-2: #d95d39;
+  --ink: #10180c;
+  --ink-muted: #2f4026;
+  --accent: #145646;
+  --accent-2: #b5482d;
   --ok: #2f8f3f;
-  --warn: #d4900d;
+  --warn: #9c6200;
   --danger: #b62835;
-  --panel: rgba(249, 251, 244, 0.88);
-  --line: rgba(32, 53, 24, 0.18);
+  --panel: rgba(251, 252, 247, 0.94);
+  --line: rgba(24, 39, 18, 0.28);
 }
 
 * {
@@ -19,9 +19,17 @@
 body {
   margin: 0;
   font-family: "Space Grotesk", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
   color: var(--ink);
   background: linear-gradient(120deg, var(--bg-1), var(--bg-2));
   min-height: 100vh;
+}
+
+h2,
+h3,
+h4 {
+  line-height: 1.3;
 }
 
 .app-bg {
@@ -53,6 +61,8 @@ body {
 
 .sidebar {
   padding: 14px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
 }
 
 .brand h1 {
@@ -85,6 +95,7 @@ body {
 
 .nav-item.active {
   border-color: var(--accent);
+  background: #f0f7f3;
   transform: translateX(3px);
   font-weight: 700;
 }
@@ -116,6 +127,7 @@ body {
 
 .content {
   padding: 16px;
+  min-width: 0;
 }
 
 .topbar {
@@ -132,6 +144,7 @@ body {
 .topbar p {
   margin: 4px 0 0;
   color: var(--ink-muted);
+  font-size: 0.96rem;
 }
 
 .topbar-links {
@@ -253,6 +266,7 @@ body {
 
 .muted {
   color: var(--ink-muted);
+  font-size: 0.94rem;
   margin-top: -4px;
 }
 
@@ -303,6 +317,9 @@ body {
 .data-table {
   width: 100%;
   border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .data-table td,
@@ -311,6 +328,7 @@ body {
   padding: 8px;
   text-align: left;
   font-size: 0.92rem;
+  min-width: 110px;
 }
 
 .data-table tr:hover {
@@ -319,12 +337,13 @@ body {
 
 .log-stream {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 0.82rem;
-  max-height: 250px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  max-height: 320px;
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 8px;
+  padding: 10px;
   background: #121a13;
   color: #d8f2cf;
 }
@@ -370,6 +389,11 @@ body {
 
 .right-rail {
   padding: 12px;
+  position: sticky;
+  top: 16px;
+  align-self: start;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
 }
 
 .quick-actions {
@@ -383,8 +407,21 @@ body {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: #fff;
-  padding: 8px;
+  padding: 9px 12px;
+  min-height: 40px;
   cursor: pointer;
+  font: inherit;
+}
+
+.quick-actions button:focus-visible,
+.form-actions button:focus-visible,
+.nav-item:focus-visible,
+.chip:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .metrics-toolbar {
@@ -407,6 +444,7 @@ body {
 .metrics-toolbar button.active {
   background: var(--accent);
   color: #fff;
+  border-color: var(--accent);
 }
 
 .alarm {
@@ -478,7 +516,7 @@ body {
 }
 
 .dpia-form label {
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   color: var(--ink-muted);
 }
 
@@ -488,7 +526,8 @@ body {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 8px;
+  padding: 10px;
+  min-height: 40px;
   font: inherit;
 }
 
@@ -535,7 +574,7 @@ body {
 
 .mini-form label,
 .workflow-card label {
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   color: var(--ink-muted);
 }
 
@@ -545,7 +584,8 @@ body {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 8px;
+  padding: 10px;
+  min-height: 40px;
   font: inherit;
 }
 
@@ -574,7 +614,7 @@ body {
 }
 
 .wal-card label {
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   color: var(--ink-muted);
 }
 
@@ -583,10 +623,14 @@ body {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 8px;
+  padding: 10px;
   font: inherit;
   margin-top: 4px;
   margin-bottom: 8px;
+}
+
+.compact-actions {
+  margin-top: 8px;
 }
 
 .wal-inline-toggle {
@@ -677,11 +721,51 @@ body {
 
   .right-rail {
     grid-column: 1 / -1;
+    position: static;
+    max-height: none;
   }
 }
 
 @media (max-width: 820px) {
+  body {
+    font-size: 15px;
+  }
+
   .layout {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .brand h1 {
+    font-size: 1.05rem;
+  }
+
+  .brand p {
+    font-size: 0.84rem;
+  }
+
+  .sidebar {
+    max-height: none;
+  }
+
+  .nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nav-item {
+    padding: 12px;
+    text-align: center;
+  }
+
+  .feature-spotlight,
+  .wal-grid,
+  .workflow-grid,
+  .assist-grid,
+  .professor-grid,
+  .gold-grid,
+  .capabilities,
+  .hint-row {
     grid-template-columns: 1fr;
   }
 
@@ -689,7 +773,110 @@ body {
     flex-direction: column;
   }
 
+  .topbar h2 {
+    font-size: 1.25rem;
+  }
+
+  .panel h3 {
+    font-size: 1.02rem;
+  }
+
+  .panel h4,
+  .feature-item h3 {
+    font-size: 0.95rem;
+  }
+
+  .feature-item p,
+  .muted,
+  .detail-box {
+    font-size: 0.88rem;
+  }
+
+  .data-table td,
+  .data-table th {
+    font-size: 0.86rem;
+    padding: 7px;
+    min-width: 98px;
+  }
+
+  .log-stream,
+  .report-box {
+    font-size: 0.8rem;
+  }
+
+  .nav-item,
+  .chip,
+  .quick-actions button,
+  .form-actions button {
+    font-size: 0.9rem;
+  }
+
+  .eps-box {
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr;
+  }
+
   .dashboard-badge {
     width: fit-content;
+    font-size: 0.74rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+
+  .topbar h2 {
+    font-size: 1.14rem;
+  }
+
+  .panel {
+    padding: 10px;
+  }
+
+  .eps-box {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --bg-1: #f8faf6;
+    --bg-2: #e6ecdd;
+    --ink: #0a1208;
+    --ink-muted: #152312;
+    --accent: #0f4e3f;
+    --accent-2: #8a2f1b;
+    --line: rgba(10, 18, 8, 0.52);
+    --panel: #ffffff;
+  }
+
+  .nav-item,
+  .panel,
+  .card,
+  .assist-card,
+  .workflow-card,
+  .wal-card,
+  .switch-row,
+  .metric-pill,
+  .detail-box,
+  .data-table td,
+  .data-table th {
+    border-width: 2px;
+  }
+
+  .quick-actions button:focus-visible,
+  .form-actions button:focus-visible,
+  .nav-item:focus-visible,
+  .chip:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline-width: 3px;
   }
 }

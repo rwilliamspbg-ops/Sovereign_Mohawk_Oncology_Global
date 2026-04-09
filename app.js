@@ -130,6 +130,13 @@ function renderSection(sectionKey) {
   document.querySelectorAll(".nav-item").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.section === sectionKey);
   });
+
+  if (window.innerWidth <= 820) {
+    const contentRoot = document.getElementById("content-root");
+    if (contentRoot) {
+      contentRoot.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
 }
 
 nav.addEventListener("click", (event) => {
@@ -224,7 +231,9 @@ const runtimeEvents = [
 
 function appendLog(container, line) {
   const ts = new Date().toISOString().slice(11, 19);
-  container.textContent = `[${ts}] ${line}\n` + container.textContent;
+  const next = `[${ts}] ${line}\n` + container.textContent;
+  const rows = next.split("\n").filter(Boolean).slice(0, 250);
+  container.textContent = `${rows.join("\n")}\n`;
 }
 
 setInterval(() => {
@@ -240,10 +249,36 @@ const auditEvents = [
   "attestation: TPM quote accepted"
 ];
 
+let auditPaused = false;
+
 setInterval(() => {
+  if (auditPaused) return;
   const eventLine = auditEvents[Math.floor(Math.random() * auditEvents.length)];
   appendLog(auditLog, eventLine);
 }, 3000);
+
+const auditPauseButton = document.getElementById("audit-pause");
+const auditClearButton = document.getElementById("audit-clear");
+
+if (auditPauseButton) {
+  auditPauseButton.addEventListener("click", () => {
+    auditPaused = !auditPaused;
+    auditPauseButton.textContent = auditPaused ? "Resume Audit" : "Pause Audit";
+    appendLog(
+      auditLog,
+      auditPaused
+        ? "audit-stream: paused by operator"
+        : "audit-stream: resumed by operator"
+    );
+  });
+}
+
+if (auditClearButton) {
+  auditClearButton.addEventListener("click", () => {
+    auditLog.textContent = "";
+    appendLog(auditLog, "audit-stream: cleared by operator");
+  });
+}
 
 const epsValueEl = document.getElementById("eps-value");
 const epsMeter = document.getElementById("eps-meter");
