@@ -10,6 +10,9 @@
 [![Package: beta](https://img.shields.io/badge/package-0.1.0b1-orange)](flower_security_wrapper/pyproject.toml)
 [![Security Profile: HIPAA-GDPR](https://img.shields.io/badge/security-HIPAA%20%7C%20GDPR-0a7b83)](docs/beta/COMPLIANCE_EVIDENCE.md)
 [![Ledger: WAL](https://img.shields.io/badge/ledger-hash--chained%20WAL-0a7b83)](flower_security_wrapper/security_wrapper/wal_ledger.py)
+[![Attestation Modes](https://img.shields.io/badge/attestation-metric__flag%20%7C%20ed25519__quote-0a7b83)](flower_security_wrapper/security_wrapper/attestation.py)
+[![Governance Readiness Gates](https://img.shields.io/badge/governance-readiness%20signals%20enabled-0a7b83)](flower_security_wrapper/security_wrapper/governance_contract.py)
+[![Round Benchmark Hooks](https://img.shields.io/badge/benchmarks-round%20hooks%20enabled-0a7b83)](flower_security_wrapper/security_wrapper/wrapper.py)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Manifesto](https://img.shields.io/badge/Manifesto-Genesis%20v1.0-black)](manifesto.html)
 
@@ -38,6 +41,9 @@ Key references:
 ## Standout Capabilities
 
 - Flower Security Wrapper: policy-gated update admission for federated rounds with signed update checks and governance enforcement ([wrapper details](flower_security_wrapper/README.md)).
+- Attestation Mode Controls: alias-aware attestation mode normalization and signature-algorithm checks for quote-based verification ([attestation verifier](flower_security_wrapper/security_wrapper/attestation.py)).
+- Governance Readiness Gates: optional readiness signal gates layered into deterministic governance admission checks ([governance contract](flower_security_wrapper/security_wrapper/governance_contract.py)).
+- Round Benchmark Hooks: per-round performance and rejection breakdown telemetry with optional callback hook for observability pipelines ([wrapper strategy](flower_security_wrapper/security_wrapper/wrapper.py)).
 - Compliance Mapping: direct evidence links for HIPAA and GDPR controls ([Compliance Evidence](docs/beta/COMPLIANCE_EVIDENCE.md), [Beta Release Plan](docs/beta/BETA_RELEASE.md)).
 - Interactive Dashboard: built-in 47-node global map simulation with click-through interactions across federated regions ([dashboard entry point](index.html)).
 - DPIA Generator: built-in GDPR impact assessment workflow with validation and draft report generation ([dashboard section in app](app.js), [compliance evidence](docs/beta/COMPLIANCE_EVIDENCE.md)).

@@ -1,35 +1,20 @@
 ---
 name: Feature request
-about: Suggest an enhancement for dashboard, wrapper, CI, or compliance workflows.
-title: "[Feature] "
-labels: [enhancement]
-assignees: []
+about: Suggest an idea for this project
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
-## Problem Statement
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
-What problem are you trying to solve?
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
 
-## Proposed Solution
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
 
-Describe your proposed approach.
-
-## Scope
-
-- [ ] Dashboard UI
-- [ ] Flower security wrapper
-- [ ] CI/CD workflow
-- [ ] Compliance documentation
-- [ ] Other
-
-## Acceptance Criteria
-
-List concrete outcomes for completion.
-
-## Risks / Constraints
-
-Mention compatibility, governance, security, or timeline constraints.
-
-## Validation Plan
-
-How should this be tested or verified?
+**Additional context**
+Add any other context or screenshots about the feature request here.

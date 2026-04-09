@@ -5,6 +5,21 @@ from typing import Dict
 from .crypto import Ed25519Verifier
 
 
+def normalize_attestation_mode(mode: str) -> str:
+    raw = str(mode or "").strip().lower()
+    aliases = {
+        "": "metric_flag",
+        "metric": "metric_flag",
+        "metric_flag": "metric_flag",
+        "boolean_flag": "metric_flag",
+        "quote": "ed25519_quote",
+        "tpm_quote": "ed25519_quote",
+        "tpm_quote_ed25519": "ed25519_quote",
+        "ed25519_quote": "ed25519_quote",
+    }
+    return aliases.get(raw, "invalid")
+
+
 class AttestationVerifier:
     """Attestation verifier with mode-based enforcement.
 
@@ -19,11 +34,13 @@ class AttestationVerifier:
         max_age_seconds: int = 300,
         expected_pcrs: Dict[str, str] | None = None,
         require_nonce_binding: bool = True,
+        signature_mode: str = "any",
     ) -> None:
-        self.mode = mode
+        self.mode = normalize_attestation_mode(mode)
         self.max_age_seconds = max_age_seconds
         self.expected_pcrs = expected_pcrs or {}
         self.require_nonce_binding = require_nonce_binding
+        self.signature_mode = str(signature_mode or "any").strip().lower() or "any"
         self.signature_verifier = Ed25519Verifier()
 
     def _parse_and_validate_tpm_quote(
@@ -48,6 +65,11 @@ class AttestationVerifier:
             not quote_nonce or quote_nonce != round_nonce
         ):
             return False
+
+        quote_signature_algo = str(parsed.get("signature_algo", "")).strip().lower()
+        if self.signature_mode not in {"any", ""}:
+            if quote_signature_algo != self.signature_mode:
+                return False
 
         for pcr_idx, expected_value in self.expected_pcrs.items():
             if str(quote_pcrs.get(pcr_idx, "")) != str(expected_value):

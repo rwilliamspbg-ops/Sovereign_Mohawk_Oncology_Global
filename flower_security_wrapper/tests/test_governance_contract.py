@@ -26,6 +26,24 @@ class TestGovernanceContract(unittest.TestCase):
         self.assertEqual(state2["strikes"], 2)
         self.assertTrue(state2["quarantined"])
 
+    def test_readiness_signals_can_be_required(self):
+        contract = GovernanceGateContract(
+            readiness_required_signals=["transport_kex_ready", "go_live_approved"]
+        )
+        metrics = {
+            "irb_approved": True,
+            "dpo_reviewed": True,
+            "data_deidentified": True,
+            "attestation_ok": True,
+            "signature_verified": True,
+            "epsilon_spent": 0.2,
+            "transport_kex_ready": True,
+            "go_live_approved": False,
+        }
+        decision = contract.evaluate("site-2", metrics, dp_limit=0.8)
+        self.assertFalse(decision.accepted)
+        self.assertIn("readiness:go_live_approved", decision.reason)
+
 
 if __name__ == "__main__":
     unittest.main()

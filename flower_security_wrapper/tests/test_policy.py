@@ -12,11 +12,14 @@ class TestPolicyLoading(unittest.TestCase):
             "allowed_client_ids": ["a"],
             "client_public_keys": {"a": "00"},
             "require_attestation": True,
+            "attestation_signature_mode": "xmss",
             "require_signature": True,
             "signature_mode": "ed25519",
             "require_nonce": True,
             "max_payload_bytes": 10,
             "max_epsilon_spent_per_round": 0.7,
+            "governance_readiness_signals": ["go_live_approved"],
+            "emit_round_benchmarks": False,
             "required_metrics": ["client_id", "payload_hash"],
         }
         with tempfile.NamedTemporaryFile("w", delete=False) as f:
@@ -29,6 +32,9 @@ class TestPolicyLoading(unittest.TestCase):
         self.assertEqual(policy.signature_mode, "ed25519")
         self.assertEqual(policy.max_payload_bytes, 10)
         self.assertEqual(policy.max_epsilon_spent_per_round, 0.7)
+        self.assertEqual(policy.attestation_signature_mode, "xmss")
+        self.assertEqual(policy.governance_readiness_signals, ["go_live_approved"])
+        self.assertFalse(policy.emit_round_benchmarks)
 
     def test_load_policy_with_env_key_injection(self):
         os.environ["TEST_CLIENT_KEYS_JSON"] = json.dumps({"site-a": "abc123"})

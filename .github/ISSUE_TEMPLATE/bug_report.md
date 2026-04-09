@@ -1,46 +1,36 @@
 ---
 name: Bug report
-about: Report a reproducible problem to help us improve reliability and safety.
-title: "[Bug] "
-labels: [bug]
-assignees: []
+about: Report a reproducible defect in protocol, runtime, CI, or tooling
+title: "[BUG] "
+labels: bug
+assignees: ''
 ---
 
 ## Summary
+Describe the bug in 1-2 sentences.
 
-Describe the bug clearly and briefly.
+## Expected behavior
+What should have happened?
+
+## Actual behavior
+What happened instead?
+
+## Reproduction steps
+1. 
+2. 
+3. 
 
 ## Environment
-
 - OS:
+- Go version:
 - Python version:
-- Browser (if UI-related):
-- Commit/branch:
+- Branch/commit:
 
-## Steps to Reproduce
-
-1.
-2.
-3.
-
-## Expected Behavior
-
-What should happen.
-
-## Actual Behavior
-
-What happened instead.
-
-## Logs / Evidence
-
-Include relevant output, traceback, screenshots, or workflow run links.
+## Logs and artifacts
+Attach relevant logs, stack traces, and files from results/ or captured_artifacts/.
 
 ## Impact
-
-- [ ] Blocks release work
-- [ ] Affects security/compliance behavior
-- [ ] Affects docs/dev workflow only
-
-## Possible Fix (Optional)
-
-If you have a proposed fix, describe it here.
+- [ ] Blocks development
+- [ ] Affects production/readiness gates
+- [ ] Performance degradation
+- [ ] Documentation only

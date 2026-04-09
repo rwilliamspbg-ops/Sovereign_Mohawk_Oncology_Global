@@ -1,4 +1,5 @@
-from typing import Any, List, Optional, Set, Tuple
+import time
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from .audit import AuditLogger
 from .attestation import AttestationVerifier
@@ -35,6 +36,7 @@ class SecurityWrapperStrategy:
         signature_verifier: Optional[Ed25519Verifier] = None,
         attestation_verifier: Optional[AttestationVerifier] = None,
         nonce_store: Optional[NonceStore] = None,
+        benchmark_hook: Optional[Callable[[Dict[str, object]], None]] = None,
     ) -> None:
         self.inner_strategy = inner_strategy
         self.policy = policy
@@ -65,6 +67,7 @@ class SecurityWrapperStrategy:
             max_age_seconds=self.policy.attestation_max_age_seconds,
             expected_pcrs=self.policy.attestation_expected_pcrs,
             require_nonce_binding=self.policy.attestation_require_nonce_binding,
+            signature_mode=self.policy.attestation_signature_mode,
         )
         self.strike_alerter = StrikePatternAlerter(
             threshold=self.policy.siem_strike_alert_threshold,
@@ -72,10 +75,12 @@ class SecurityWrapperStrategy:
         )
         self.governance_contract = GovernanceGateContract(
             required_gates=self.policy.governance_required_gates,
+            readiness_required_signals=self.policy.governance_readiness_signals,
             initial_stake=self.policy.initial_stake,
             slash_amounts=self.policy.slash_amounts or None,
             strike_quarantine_threshold=self.policy.strike_quarantine_threshold,
         )
+        self.benchmark_hook = benchmark_hook
 
     def __getattr__(self, name: str) -> Any:
         # Forward unsupported methods/attributes to the wrapped strategy.
@@ -87,8 +92,13 @@ class SecurityWrapperStrategy:
         results: List[Tuple[Any, Any]],
         failures: List[Any],
     ) -> Any:
+        round_start = time.perf_counter()
         accepted: List[Tuple[Any, Any]] = []
         poisoned_clients = set()
+        governance_rejections = 0
+        poisoning_rejections = 0
+        validation_rejections = 0
+        client_eval_elapsed_ms: List[float] = []
 
         if self.policy.require_vector_consensus_checks:
             vectors = {}
@@ -110,10 +120,12 @@ class SecurityWrapperStrategy:
             )
 
         for client_proxy, fit_res in results:
+            client_eval_start = time.perf_counter()
             metrics = dict(getattr(fit_res, "metrics", {}) or {})
             client_id = str(metrics.get("client_id", "unknown"))
 
             if client_id in poisoned_clients:
+                poisoning_rejections += 1
                 slash_state = self.governance_contract.slash(
                     client_id, RejectionCode.POISONING_ANOMALY
                 )
@@ -128,6 +140,9 @@ class SecurityWrapperStrategy:
                         "quarantined": slash_state["quarantined"],
                     },
                 )
+                client_eval_elapsed_ms.append(
+                    (time.perf_counter() - client_eval_start) * 1000.0
+                )
                 continue
 
             if self.policy.enable_governance_contract:
@@ -137,6 +152,7 @@ class SecurityWrapperStrategy:
                     dp_limit=self.policy.max_epsilon_spent_per_round,
                 )
                 if not governance_decision.accepted:
+                    governance_rejections += 1
                     slash_state = self.governance_contract.slash(
                         client_id, RejectionCode.POLICY_ERROR
                     )
@@ -151,6 +167,9 @@ class SecurityWrapperStrategy:
                             "strikes": slash_state["strikes"],
                             "quarantined": slash_state["quarantined"],
                         },
+                    )
+                    client_eval_elapsed_ms.append(
+                        (time.perf_counter() - client_eval_start) * 1000.0
                     )
                     continue
 
@@ -178,6 +197,7 @@ class SecurityWrapperStrategy:
                     },
                 )
             else:
+                validation_rejections += 1
                 slash_state = {
                     "stake": None,
                     "strikes": None,
@@ -209,6 +229,10 @@ class SecurityWrapperStrategy:
                     },
                 )
 
+            client_eval_elapsed_ms.append(
+                (time.perf_counter() - client_eval_start) * 1000.0
+            )
+
         if not accepted:
             self.audit.log(
                 "round_rejected",
@@ -217,5 +241,29 @@ class SecurityWrapperStrategy:
                     "reason": "no_updates_passed_security_policy",
                 },
             )
+
+        if self.policy.emit_round_benchmarks:
+            benchmark_payload: Dict[str, object] = {
+                "round": server_round,
+                "total_results": len(results),
+                "accepted": len(accepted),
+                "rejected": len(results) - len(accepted),
+                "rejected_poisoning": poisoning_rejections,
+                "rejected_governance": governance_rejections,
+                "rejected_validation": validation_rejections,
+                "elapsed_ms": round((time.perf_counter() - round_start) * 1000.0, 3),
+                "avg_client_eval_ms": round(
+                    sum(client_eval_elapsed_ms) / len(client_eval_elapsed_ms), 3
+                )
+                if client_eval_elapsed_ms
+                else 0.0,
+            }
+            self.audit.log("round_benchmark", benchmark_payload)
+            if self.benchmark_hook is not None:
+                try:
+                    self.benchmark_hook(benchmark_payload)
+                except Exception:
+                    # Observability hooks must not block training rounds.
+                    pass
 
         return self.inner_strategy.aggregate_fit(server_round, accepted, failures)

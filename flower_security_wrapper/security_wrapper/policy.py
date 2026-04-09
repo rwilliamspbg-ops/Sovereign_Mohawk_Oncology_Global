@@ -11,6 +11,7 @@ class SecurityPolicy:
     client_public_keys_env: str = ""
     require_attestation: bool = True
     attestation_mode: str = "metric_flag"
+    attestation_signature_mode: str = "any"
     attestation_public_keys: Dict[str, str] = field(default_factory=dict)
     attestation_public_keys_env: str = ""
     attestation_max_age_seconds: int = 300
@@ -41,6 +42,7 @@ class SecurityPolicy:
             "dp_within_budget",
         ]
     )
+    governance_readiness_signals: List[str] = field(default_factory=list)
     slashing_enabled: bool = True
     initial_stake: int = 100
     strike_quarantine_threshold: int = 3
@@ -49,6 +51,7 @@ class SecurityPolicy:
     siem_webhook_url_env: str = ""
     siem_timeout_seconds: int = 2
     siem_strike_alert_threshold: int = 3
+    emit_round_benchmarks: bool = True
     required_metrics: List[str] = field(
         default_factory=lambda: [
             "client_id",

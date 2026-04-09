@@ -21,6 +21,7 @@ class GovernanceGateContract:
     def __init__(
         self,
         required_gates: Optional[List[str]] = None,
+        readiness_required_signals: Optional[List[str]] = None,
         initial_stake: int = 100,
         slash_amounts: Optional[Dict[str, int]] = None,
         strike_quarantine_threshold: int = 3,
@@ -34,6 +35,7 @@ class GovernanceGateContract:
             "dp_within_budget",
         ]
         self.default_stake = initial_stake
+        self.readiness_required_signals = readiness_required_signals or []
         self.stakes: Dict[str, int] = {}
         self.strikes: Dict[str, int] = {}
         self.quarantined: Dict[str, bool] = {}
@@ -73,7 +75,14 @@ class GovernanceGateContract:
             "human_review_async": True,
         }
 
-        failed = [name for name in self.required_gates if not gates.get(name, False)]
+        for signal in self.readiness_required_signals:
+            key = f"readiness:{signal}"
+            gates[key] = bool(metrics.get(signal, False))
+
+        required = list(self.required_gates) + [
+            f"readiness:{signal}" for signal in self.readiness_required_signals
+        ]
+        failed = [name for name in required if not gates.get(name, False)]
         if failed:
             return GovernanceDecision(False, f"failed_gates:{','.join(failed)}", gates)
 
