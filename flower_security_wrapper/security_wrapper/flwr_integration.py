@@ -1,7 +1,8 @@
 from typing import Any
+import os
 
 from .audit import AuditLogger
-from .policy import SecurityPolicy, load_policy_from_json
+from .policy import SecurityPolicy, load_policy
 from .wrapper import SecurityWrapperStrategy
 
 
@@ -29,12 +30,17 @@ class SecurityFedAvgStrategy(SecurityWrapperStrategy):
 
 
 def build_secure_fedavg(
-    policy_path: str,
+    policy_path: str | None = None,
     audit_path: str = "security_audit.jsonl",
     **fedavg_kwargs: Any,
 ) -> SecurityFedAvgStrategy:
-    policy = load_policy_from_json(policy_path)
-    audit_logger = AuditLogger(audit_path)
+    policy = load_policy(policy_path)
+    enable_wal = os.getenv("FLWR_ENABLE_WAL", "true").strip().lower() not in {
+        "0",
+        "false",
+        "no",
+    }
+    audit_logger = AuditLogger(audit_path, enable_wal=enable_wal)
     return SecurityFedAvgStrategy(
         policy=policy, audit_logger=audit_logger, **fedavg_kwargs
     )

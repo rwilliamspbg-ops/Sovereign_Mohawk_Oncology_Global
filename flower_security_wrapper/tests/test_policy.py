@@ -3,7 +3,7 @@ import os
 import tempfile
 import unittest
 
-from security_wrapper.policy import load_policy_from_json
+from security_wrapper.policy import load_policy_from_json, resolve_policy_path
 
 
 class TestPolicyLoading(unittest.TestCase):
@@ -58,6 +58,27 @@ class TestPolicyLoading(unittest.TestCase):
         self.assertEqual(policy.client_public_keys["site-a"], "abc123")
         self.assertEqual(policy.attestation_public_keys["site-a"], "def456")
         self.assertEqual(policy.siem_webhook_url, "http://127.0.0.1:9999/hook")
+
+    def test_nonce_store_env_overrides(self):
+        os.environ["FLWR_NONCE_STORE_TYPE"] = "sqlite"
+        os.environ["FLWR_NONCE_STORE_PATH"] = "./dev_nonce.db"
+
+        data = {
+            "allowed_client_ids": ["site-a"],
+            "nonce_store_mode": "memory",
+            "nonce_sqlite_path": "nonce_cache.db",
+        }
+        with tempfile.NamedTemporaryFile("w", delete=False) as f:
+            json.dump(data, f)
+            path = f.name
+
+        policy = load_policy_from_json(path)
+        self.assertEqual(policy.nonce_store_mode, "sqlite")
+        self.assertEqual(policy.nonce_sqlite_path, "./dev_nonce.db")
+
+    def test_resolve_policy_path_prefers_strict_env(self):
+        os.environ["FLWR_POLICY_FILE"] = "policy.rare_disease.json"
+        self.assertEqual(resolve_policy_path("fallback.json"), "policy.rare_disease.json")
 
 
 if __name__ == "__main__":

@@ -16,6 +16,10 @@ class TestAttestationVerifier(unittest.TestCase):
         self.assertTrue(verifier.verify({"attestation_ok": True}, "site-1"))
         self.assertFalse(verifier.verify({"attestation_ok": False}, "site-1"))
 
+    def test_metric_flag_fallback_can_be_disabled(self):
+        verifier = AttestationVerifier(mode="metric_flag", allow_metric_fallback=False)
+        self.assertFalse(verifier.verify({"attestation_ok": True}, "site-1"))
+
     def test_quote_signature_mode_mismatch_rejected(self):
         verifier = AttestationVerifier(
             mode="tpm_quote",

@@ -68,6 +68,7 @@ class SecurityWrapperStrategy:
             expected_pcrs=self.policy.attestation_expected_pcrs,
             require_nonce_binding=self.policy.attestation_require_nonce_binding,
             signature_mode=self.policy.attestation_signature_mode,
+            allow_metric_fallback=self.policy.allow_attestation_metric_fallback,
         )
         self.strike_alerter = StrikePatternAlerter(
             threshold=self.policy.siem_strike_alert_threshold,

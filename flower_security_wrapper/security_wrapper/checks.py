@@ -47,9 +47,10 @@ def check_signature(
     nonce = str(metrics.get("nonce", ""))
     payload_hash = str(metrics.get("payload_hash", ""))
     signature_hex = str(metrics.get("signature_hex", ""))
-    public_key_hex = policy.client_public_keys.get(client_id) or str(
-        metrics.get("public_key_hex", "")
-    )
+    allowlisted_key = policy.client_public_keys.get(client_id)
+    if policy.require_client_public_key_allowlist and not allowlisted_key:
+        return RejectionCode.SIGNATURE_INVALID
+    public_key_hex = allowlisted_key or str(metrics.get("public_key_hex", ""))
 
     if (
         not client_id
@@ -82,6 +83,8 @@ def check_attestation(
         return None
     client_id = str(metrics.get("client_id", ""))
     pubkey = policy.attestation_public_keys.get(client_id)
+    if policy.require_attestation_public_key_allowlist and not pubkey:
+        return RejectionCode.ATTESTATION_FAILED
     if not verifier.verify(
         metrics=metrics, client_id=client_id, attestation_public_key_hex=pubkey
     ):
@@ -161,7 +164,10 @@ def evaluate_update(
 ) -> Tuple[bool, Optional[RejectionCode]]:
     verifier = verifier or Ed25519Verifier()
     attestation_verifier = attestation_verifier or AttestationVerifier(
-        mode=policy.attestation_mode, max_age_seconds=policy.attestation_max_age_seconds
+        mode=policy.attestation_mode,
+        max_age_seconds=policy.attestation_max_age_seconds,
+        signature_mode=policy.attestation_signature_mode,
+        allow_metric_fallback=policy.allow_attestation_metric_fallback,
     )
 
     checks = [

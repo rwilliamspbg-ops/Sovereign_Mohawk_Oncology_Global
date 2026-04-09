@@ -35,12 +35,14 @@ class AttestationVerifier:
         expected_pcrs: Dict[str, str] | None = None,
         require_nonce_binding: bool = True,
         signature_mode: str = "any",
+        allow_metric_fallback: bool = True,
     ) -> None:
         self.mode = normalize_attestation_mode(mode)
         self.max_age_seconds = max_age_seconds
         self.expected_pcrs = expected_pcrs or {}
         self.require_nonce_binding = require_nonce_binding
         self.signature_mode = str(signature_mode or "any").strip().lower() or "any"
+        self.allow_metric_fallback = bool(allow_metric_fallback)
         self.signature_verifier = Ed25519Verifier()
 
     def _parse_and_validate_tpm_quote(
@@ -83,6 +85,8 @@ class AttestationVerifier:
         attestation_public_key_hex: str | None = None,
     ) -> bool:
         if self.mode == "metric_flag":
+            if not self.allow_metric_fallback:
+                return False
             return bool(metrics.get("attestation_ok", False))
 
         if self.mode != "ed25519_quote":

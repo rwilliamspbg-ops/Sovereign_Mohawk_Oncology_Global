@@ -1,5 +1,5 @@
 from .wrapper import SecurityWrapperStrategy
-from .policy import SecurityPolicy, load_policy_from_json
+from .policy import SecurityPolicy, load_policy_from_json, load_policy, resolve_policy_path
 from .rejection_codes import RejectionCode
 from .crypto import Ed25519Verifier
 from .flwr_integration import SecurityFedAvgStrategy, build_secure_fedavg
@@ -19,6 +19,8 @@ __all__ = [
     "SecurityWrapperStrategy",
     "SecurityPolicy",
     "load_policy_from_json",
+    "load_policy",
+    "resolve_policy_path",
     "RejectionCode",
     "Ed25519Verifier",
     "SecurityFedAvgStrategy",

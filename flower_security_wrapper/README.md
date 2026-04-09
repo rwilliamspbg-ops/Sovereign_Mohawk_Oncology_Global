@@ -12,8 +12,8 @@ Related full-stack surfaces:
 ## What it enforces
 
 - Client allowlist checks
-- Ed25519 signature verification (or metric flag fallback)
-- Attestation checks (`metric_flag` or signed quote verification)
+- Ed25519 signature verification with client public-key allowlist enforcement
+- Attestation checks with signed quote verification (`ed25519_quote`) and optional metric fallback disablement
 - Round-bound nonce replay protection with durable stores (`sqlite`, `redis`, `postgres`)
 - Differential privacy budget threshold checks
 - Payload size limits
@@ -39,27 +39,42 @@ Related full-stack surfaces:
 - `security_wrapper/audit.py`: JSONL audit logger
 - `security_wrapper/wal_ledger.py`: Append-only write-ahead ledger with tamper checks
 - `security_wrapper/rejection_codes.py`: Rejection taxonomy
-- `policy.example.json`: Example policy
+- `policy.example.json`: Legacy compatibility profile (less strict)
 - `policy.rare_disease.json`: Rare-disease-first profile (stricter DP + faster quarantine)
 - `example_server.py`: Integration skeleton
 - `adversarial_exercise.py`: 1 benign + 2 malicious staging simulation
 
 ## Quick start
 
-1. Copy and customize `policy.example.json`.
+1. Start from the strict profile and customize `policy.rare_disease.json`.
 2. Wrap your Flower strategy:
 
 ```python
 from security_wrapper import build_secure_fedavg
 
 secure_strategy = build_secure_fedavg(
-  policy_path="policy.example.json",
+  policy_path="policy.rare_disease.json",
   min_fit_clients=2,
   min_available_clients=2,
 )
 ```
 
 1. Use `secure_strategy` in your Flower server startup.
+
+Recommended strict startup environment:
+
+```bash
+export FLWR_POLICY_FILE=policy.rare_disease.json
+export FLWR_NONCE_STORE_TYPE=sqlite
+export FLWR_NONCE_STORE_PATH=./dev_nonce.db
+export FLWR_ENABLE_WAL=true
+
+export FLWR_RD_CLIENT_PUBLIC_KEYS_JSON='{"hospital-rd-01":"<hex>","hospital-rd-02":"<hex>"}'
+export FLWR_RD_ATTESTATION_PUBLIC_KEYS_JSON='{"hospital-rd-01":"<hex>","hospital-rd-02":"<hex>"}'
+export FLWR_RD_SIEM_WEBHOOK_URL='http://localhost:8080/siem'
+```
+
+This configuration avoids in-memory nonce replay gaps and forces quote-based attestation + key allowlists.
 
 ## Beta Packaging and CI
 
