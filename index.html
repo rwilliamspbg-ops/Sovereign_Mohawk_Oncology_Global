@@ -66,6 +66,15 @@
         </div>
       </header>
 
+      <section class="operator-strip" aria-label="Operator status HUD">
+        <div class="status-chip" id="hud-stream-status">Stream: CONNECTED</div>
+        <div class="status-chip" id="hud-policy-profile">Policy: RARE-DISEASE</div>
+        <div class="status-chip" id="hud-attest-mode">Attestation: ED25519 QUOTE</div>
+        <div class="status-chip" id="hud-nonce-store">Nonce Store: SQLITE</div>
+        <div class="status-chip" id="hud-round-status">Round: 0</div>
+        <div class="status-chip" id="hud-alert-status">Alert: NORMAL</div>
+      </section>
+
       <section class="feature-spotlight" aria-label="Standout repository features">
         <article class="feature-item">
           <span class="feature-kicker">Flower Security Wrapper</span>
@@ -136,6 +145,18 @@
 
         <section class="panel" data-view="pipeline" hidden>
           <h3>MOHAWK Runtime Stream</h3>
+          <div class="terminal-toolbar">
+            <label><input type="checkbox" id="runtime-hide-routine" checked /> Hide routine rounds</label>
+            <label>Focus
+              <select id="runtime-focus-mode">
+                <option value="all">all</option>
+                <option value="critical">critical only</option>
+                <option value="security">security only</option>
+              </select>
+            </label>
+            <label><input type="checkbox" id="runtime-auto-scroll" checked /> Auto-scroll</label>
+            <button type="button" id="runtime-clear">Clear</button>
+          </div>
           <div class="log-stream" id="runtime-log"></div>
           <div class="capabilities">
             <div>
@@ -441,8 +462,8 @@
       <h3>Audit Stream</h3>
       <div class="log-stream" id="audit-log"></div>
       <div class="form-actions compact-actions">
-        <button type="button" id="audit-pause">Pause Audit</button>
-        <button type="button" id="audit-clear">Clear Audit</button>
+        <button type="button" id="audit-stream-pause">Pause Audit</button>
+        <button type="button" id="audit-stream-clear">Clear Audit</button>
       </div>
       <div class="quick-actions">
         <button data-action="risk">Risk Assessment ↗</button>

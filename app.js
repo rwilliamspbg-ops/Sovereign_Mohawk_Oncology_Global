@@ -221,13 +221,25 @@ document.getElementById("blocked-caps").innerHTML = blockedCaps.map((cap) => `<l
 const runtimeLog = document.getElementById("runtime-log");
 const auditLog = document.getElementById("audit-log");
 const runtimeEvents = [
-  "node-agent[eu-04]: collected local batch gradients",
-  "dp-clip: l2_norm=0.97 clipped to threshold=0.85",
-  "manifest-sign: Ed25519 signature verified",
-  "wasmtime: capability gate passed (write_clipped_gradient)",
-  "secure-agg: encrypted shard submitted",
-  "aggregator: global round 481 committed"
+  { kind: "training_round", severity: "info", message: "node-agent[eu-04]: collected local batch gradients" },
+  { kind: "privacy", severity: "info", message: "dp-clip: l2_norm=0.97 clipped to threshold=0.85" },
+  { kind: "security", severity: "info", message: "manifest-sign: Ed25519 signature verified" },
+  { kind: "security", severity: "warning", message: "wasmtime: capability gate passed (write_clipped_gradient)" },
+  { kind: "network", severity: "info", message: "secure-agg: encrypted shard submitted" },
+  { kind: "training_round", severity: "info", message: "aggregator: global round 481 committed" },
+  { kind: "security", severity: "error", message: "attestation: signature mismatch detected then blocked" }
 ];
+
+const runtimeHideRoutineEl = document.getElementById("runtime-hide-routine");
+const runtimeFocusEl = document.getElementById("runtime-focus-mode");
+const runtimeAutoScrollEl = document.getElementById("runtime-auto-scroll");
+const runtimeClearEl = document.getElementById("runtime-clear");
+
+const hudStreamStatusEl = document.getElementById("hud-stream-status");
+const hudRoundStatusEl = document.getElementById("hud-round-status");
+const hudAlertStatusEl = document.getElementById("hud-alert-status");
+
+let runtimeRound = 0;
 
 function appendLog(container, line) {
   const ts = new Date().toISOString().slice(11, 19);
@@ -237,9 +249,39 @@ function appendLog(container, line) {
 }
 
 setInterval(() => {
-  const eventLine = runtimeEvents[Math.floor(Math.random() * runtimeEvents.length)];
-  appendLog(runtimeLog, eventLine);
+  const evt = runtimeEvents[Math.floor(Math.random() * runtimeEvents.length)];
+  const hideRoutine = runtimeHideRoutineEl ? runtimeHideRoutineEl.checked : false;
+  const focus = runtimeFocusEl ? runtimeFocusEl.value : "all";
+
+  if (hideRoutine && evt.kind === "training_round" && evt.severity !== "error") {
+    return;
+  }
+  if (focus === "critical" && evt.severity === "info") {
+    return;
+  }
+  if (focus === "security" && evt.kind !== "security") {
+    return;
+  }
+
+  if (evt.kind === "training_round") {
+    runtimeRound += 1;
+    if (hudRoundStatusEl) {
+      hudRoundStatusEl.textContent = `Round: ${runtimeRound}`;
+    }
+  }
+
+  appendLog(runtimeLog, `[${evt.kind.toUpperCase()}][${evt.severity.toUpperCase()}] ${evt.message}`);
+  if (runtimeAutoScrollEl?.checked) {
+    runtimeLog.scrollTop = runtimeLog.scrollHeight;
+  }
 }, 3000);
+
+if (runtimeClearEl) {
+  runtimeClearEl.addEventListener("click", () => {
+    runtimeLog.textContent = "";
+    appendLog(runtimeLog, "terminal: runtime log cleared by operator");
+  });
+}
 
 const auditEvents = [
   "policy-engine: SCC validity check complete",
@@ -257,13 +299,16 @@ setInterval(() => {
   appendLog(auditLog, eventLine);
 }, 3000);
 
-const auditPauseButton = document.getElementById("audit-pause");
-const auditClearButton = document.getElementById("audit-clear");
+const auditPauseButton = document.getElementById("audit-stream-pause");
+const auditClearButton = document.getElementById("audit-stream-clear");
 
 if (auditPauseButton) {
   auditPauseButton.addEventListener("click", () => {
     auditPaused = !auditPaused;
     auditPauseButton.textContent = auditPaused ? "Resume Audit" : "Pause Audit";
+    if (hudStreamStatusEl) {
+      hudStreamStatusEl.textContent = auditPaused ? "Stream: PAUSED" : "Stream: CONNECTED";
+    }
     appendLog(
       auditLog,
       auditPaused
@@ -418,6 +463,11 @@ function updateAlarmAndBottom() {
 
   alarmBanner.className = `alarm ${cls}`;
   alarmBanner.textContent = label;
+
+  if (hudAlertStatusEl) {
+    hudAlertStatusEl.className = `status-chip ${cls === "ok" ? "" : cls}`.trim();
+    hudAlertStatusEl.textContent = `Alert: ${cls.toUpperCase()}`;
+  }
 
   metricBottom.innerHTML = `
     <div class="metric-pill">N. America Availability: ${(97 + Math.random() * 2).toFixed(2)}%</div>

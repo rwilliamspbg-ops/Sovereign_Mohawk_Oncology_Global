@@ -151,6 +151,34 @@ h4 {
   margin-top: 10px;
 }
 
+.operator-strip {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.status-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #f6faef;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.status-chip.warn {
+  background: rgba(212, 144, 13, 0.18);
+  color: #6b4a05;
+}
+
+.status-chip.critical {
+  background: rgba(182, 40, 53, 0.2);
+  color: #6b0f19;
+}
+
 .dashboard-badge {
   display: inline-block;
   border: 1px solid #1a1a1a;
@@ -346,6 +374,31 @@ h4 {
   padding: 10px;
   background: #121a13;
   color: #d8f2cf;
+}
+
+.terminal-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  font-size: 0.84rem;
+}
+
+.terminal-toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-muted);
+}
+
+.terminal-toolbar select,
+.terminal-toolbar button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 6px 8px;
+  font: inherit;
 }
 
 .capabilities {
@@ -759,6 +812,7 @@ textarea:focus-visible {
   }
 
   .feature-spotlight,
+  .operator-strip,
   .wal-grid,
   .workflow-grid,
   .assist-grid,
@@ -818,6 +872,10 @@ textarea:focus-visible {
 
   .quick-actions {
     grid-template-columns: 1fr;
+  }
+
+  .terminal-toolbar {
+    font-size: 0.8rem;
   }
 
   .dashboard-badge {
