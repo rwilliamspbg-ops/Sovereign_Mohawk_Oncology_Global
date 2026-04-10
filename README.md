@@ -1,7 +1,7 @@
 # Sovereign_Mohawk_Oncology_Global
 
 [![CI](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/ci.yml/badge.svg)](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/ci.yml)
-[![Pages](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/pages.yml/badge.svg)](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/pages.yml)
+[![HUD Pages](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/pages.yml/badge.svg)](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/pages.yml)
 [![Beta Artifacts](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/beta-artifacts.yml/badge.svg)](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/beta-artifacts.yml)
 [![Release Drafter](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/release-drafter.yml/badge.svg)](https://github.com/rwilliamspbg-ops/Sovereign_Mohawk_Oncology_Global/actions/workflows/release-drafter.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](flower_security_wrapper/pyproject.toml)

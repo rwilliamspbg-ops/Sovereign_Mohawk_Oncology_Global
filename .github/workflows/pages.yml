@@ -1,4 +1,4 @@
-name: Deploy Demo to GitHub Pages
+name: Deploy HUD to GitHub Pages
 
 on:
   push:
@@ -23,10 +23,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build static site bundle
+      - name: Build HUD bundle
         run: |
           mkdir -p _site
-          cp index.html styles.css app.js _site/
+          cp index.html styles.css app.js manifesto.html _site/
+          cp -r docs _site/docs
 
       - name: Check Pages enablement
         id: pages_check
