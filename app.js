@@ -352,7 +352,7 @@ function normalizeBackendHudState(payload) {
     coverageSummary: payload?.node_coverage?.coverage_label
       || (payload?.node_coverage
         ? `Coverage: ${payload.node_coverage.total_nodes || totalNodeCount} backend nodes across ${payload.node_coverage.region_count || regionNodes.length} regions`
-      : demoState.coverageSummary,
+          : demoState.coverageSummary),
     backendSource: String(payload?.source || "backend-api").trim() || "backend-api",
     backendUpdatedAt: String(payload?.updated_at || new Date().toISOString()).trim(),
   };
