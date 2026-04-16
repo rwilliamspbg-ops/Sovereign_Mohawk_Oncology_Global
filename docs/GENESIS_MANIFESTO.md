@@ -14,9 +14,9 @@ The Sovereign Mohawk Ecosystem exists to build a planetary-scale, formally verif
 
 ## II. The Technical Covenant
 
-We commit to a standard of "Privacy by Mathematical Proof," not just "Privacy by Promise." Every node in the Mohawk network adheres to:
+We commit to a standard of "Privacy by Mathematical Proof," not just "Privacy by Promise." In the live demo, every node in the Mohawk network is represented through a simulation layer that adheres to:
 
-- Formal Verification: Our core protocol, [Sovereign-Mohawk-Proto](../flower_security_wrapper/README.md), is mathematically proven to prevent data leakage during aggregation.
+- Formal Verification: Our core protocol, [Sovereign-Mohawk-Proto](../flower_security_wrapper/README.md), is framed for formally checked aggregation controls and demo-aligned enforcement.
 - Active Privacy Budgeting: We maintain a clinical-grade privacy budget ($\epsilon \approx 0.61$), ensuring that no individual patient record can ever be reconstructed from global model updates.
 - Hardware Attestation: Every participant is a "Sovereign Co-Founder." Through TPM quote acceptance, we verify that compute is happening on secure, untampered hardware.
 
@@ -46,7 +46,7 @@ We are not looking for users; we are looking for Sovereign Nodes.
 
 ## Appendix: The Portfolio Evidence
 
-- Current Infrastructure: 47 Live Global Nodes
+- Current Infrastructure: 47 Simulated Global Nodes
 - Security Standard: Gold-Security 100% Feasible Controls
 - Compliance: Automated GDPR Art. 35 DPIA Generation
 

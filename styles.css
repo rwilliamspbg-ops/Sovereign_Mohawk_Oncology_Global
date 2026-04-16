@@ -169,6 +169,32 @@ h4 {
   text-align: center;
 }
 
+.status-chip {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.chip-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.76;
+}
+
+.chip-value {
+  font-size: 0.92rem;
+  line-height: 1.1;
+}
+
+.chip-meta {
+  color: var(--ink-muted);
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
+
 .status-chip.warn {
   background: rgba(212, 144, 13, 0.18);
   color: #6b4a05;
@@ -195,6 +221,44 @@ h4 {
 .dashboard-badge:hover {
   opacity: 0.9;
   transform: translateY(-1px);
+}
+
+.hud-meta {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.hud-meta-item {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f9fbf4, #eef4e7);
+  padding: 9px 10px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+}
+
+.hud-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.hud-action {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  padding: 8px 10px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.hud-action.secondary {
+  background: #f5f7ef;
 }
 
 .eps-box {
@@ -301,7 +365,7 @@ h4 {
 .node-map,
 .pipeline {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 8px;
 }
 
@@ -535,6 +599,7 @@ textarea:focus-visible {
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 8px;
   margin-top: 10px;
+  min-width: 0;
 }
 
 .metric-pill {
@@ -813,6 +878,7 @@ textarea:focus-visible {
 
   .feature-spotlight,
   .operator-strip,
+  .hud-meta,
   .wal-grid,
   .workflow-grid,
   .assist-grid,
@@ -870,6 +936,24 @@ textarea:focus-visible {
     grid-template-columns: 1fr 1fr;
   }
 
+  .hud-actions {
+    width: 100%;
+  }
+
+  .hud-action {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .node-map,
+  .pipeline {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  #metrics-canvas {
+    height: 220px;
+  }
+
   .quick-actions {
     grid-template-columns: 1fr;
   }
@@ -899,6 +983,18 @@ textarea:focus-visible {
 
   .eps-box {
     grid-template-columns: 1fr;
+  }
+
+  .node-map,
+  .pipeline,
+  .metric-bottom,
+  .hud-meta,
+  .operator-strip {
+    grid-template-columns: 1fr;
+  }
+
+  #metrics-canvas {
+    height: 200px;
   }
 }
 

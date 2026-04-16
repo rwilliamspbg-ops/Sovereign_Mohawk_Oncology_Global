@@ -49,7 +49,7 @@
       <header class="topbar">
         <div>
           <h2 id="section-title">Dashboard</h2>
-          <p id="section-subtitle">47-node federated research network and live privacy budget telemetry.</p>
+          <p id="section-subtitle">47-node aggregated regional demo network and live privacy budget telemetry.</p>
           <div class="topbar-links">
             <a class="dashboard-badge" href="manifesto.html" target="_blank" rel="noopener noreferrer">Manifesto: Genesis v1.0</a>
           </div>
@@ -72,7 +72,19 @@
         <div class="status-chip" id="hud-attest-mode">Attestation: ED25519 QUOTE</div>
         <div class="status-chip" id="hud-nonce-store">Nonce Store: SQLITE</div>
         <div class="status-chip" id="hud-round-status">Round: 0</div>
+        <div class="status-chip" id="hud-audit-status">Audit: LIVE</div>
+        <div class="status-chip" id="hud-alert-source">Alert Source: governance-contract</div>
         <div class="status-chip" id="hud-alert-status">Alert: NORMAL</div>
+      </section>
+
+      <section class="hud-meta" aria-label="Live demo summary" aria-live="polite">
+        <div class="hud-meta-item" id="hud-node-coverage">Coverage: 47 simulated nodes across 7 regions</div>
+        <div class="hud-meta-item" id="hud-last-event">Last event: Awaiting first runtime tick</div>
+        <div class="hud-meta-item" id="hud-last-sync">Updated: --</div>
+        <div class="hud-actions">
+          <button type="button" class="hud-action" id="dashboard-replay">Replay Saved Session</button>
+          <button type="button" class="hud-action secondary" id="dashboard-reset">Reset Saved Session</button>
+        </div>
       </section>
 
       <section class="feature-spotlight" aria-label="Standout repository features">
@@ -106,9 +118,9 @@
 
         <article class="feature-item">
           <span class="feature-kicker">Interactive Dashboard</span>
-          <h3>47-node global map simulation</h3>
+          <h3>47-node regional map simulation</h3>
           <p>Use the built-in map and pipeline stages to simulate multi-region federated interactions.</p>
-          <button class="feature-action" data-feature-nav="dashboard">Open Global Map</button>
+          <button class="feature-action" data-feature-nav="dashboard">Open Regional Map</button>
         </article>
 
         <article class="feature-item">
@@ -121,10 +133,10 @@
 
       <div class="panel-grid">
         <section class="panel" data-view="dashboard">
-          <h3>Global Node Map (47)</h3>
-          <p class="muted">Click a region node to inspect site status and secure aggregation readiness.</p>
+          <h3>Regional Node Coverage (47 simulated nodes)</h3>
+          <p class="muted">Click a region node to inspect site status, availability, and aggregate readiness.</p>
           <div class="node-map" id="node-map"></div>
-          <div id="node-detail" class="detail-box">Select a region for details.</div>
+          <div id="node-detail" class="detail-box" aria-live="polite">Select a region for details.</div>
         </section>
 
         <section class="panel" data-view="dashboard">
@@ -157,7 +169,7 @@
             <label><input type="checkbox" id="runtime-auto-scroll" checked /> Auto-scroll</label>
             <button type="button" id="runtime-clear">Clear</button>
           </div>
-          <div class="log-stream" id="runtime-log"></div>
+          <div class="log-stream" id="runtime-log" aria-live="polite"></div>
           <div class="capabilities">
             <div>
               <h4>capabilities.json (allowed)</h4>
@@ -237,7 +249,7 @@
           </div>
           <div id="alarm-banner" class="alarm ok">Status: NORMAL</div>
           <canvas id="metrics-canvas" width="900" height="260" aria-label="metrics chart"></canvas>
-          <div class="metric-bottom" id="metric-bottom"></div>
+          <div class="metric-bottom" id="metric-bottom" aria-live="polite"></div>
         </section>
 
         <section class="panel" data-view="dpia" hidden>
@@ -460,7 +472,7 @@
 
     <aside class="right-rail">
       <h3>Audit Stream</h3>
-      <div class="log-stream" id="audit-log"></div>
+      <div class="log-stream" id="audit-log" aria-live="polite"></div>
       <div class="form-actions compact-actions">
         <button type="button" id="audit-stream-pause">Pause Audit</button>
         <button type="button" id="audit-stream-clear">Clear Audit</button>

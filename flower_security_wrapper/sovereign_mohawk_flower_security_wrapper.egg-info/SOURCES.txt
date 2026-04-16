@@ -12,6 +12,7 @@ pyproject.toml
 ./security_wrapper/policy.py
 ./security_wrapper/rejection_codes.py
 ./security_wrapper/siem.py
+./security_wrapper/wal_ledger.py
 ./security_wrapper/wrapper.py
 security_wrapper/__init__.py
 security_wrapper/attestation.py
@@ -25,6 +26,7 @@ security_wrapper/poisoning.py
 security_wrapper/policy.py
 security_wrapper/rejection_codes.py
 security_wrapper/siem.py
+security_wrapper/wal_ledger.py
 security_wrapper/wrapper.py
 sovereign_mohawk_flower_security_wrapper.egg-info/PKG-INFO
 sovereign_mohawk_flower_security_wrapper.egg-info/SOURCES.txt
@@ -40,3 +42,5 @@ tests/test_pentest_simulation.py
 tests/test_poisoning.py
 tests/test_policy.py
 tests/test_siem.py
+tests/test_wal_ledger.py
+tests/test_wrapper_benchmarks.py

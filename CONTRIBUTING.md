@@ -1,190 +1,90 @@
-# Contributing to Sovereign Mohawk Protocol (SMP)
+# Contributing to Sovereign Mohawk Oncology Global
 
-[![Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?logo=discord&logoColor=white)](https://discord.com/invite/raBz79CJ)
+Thanks for contributing.
 
-Thank you for your interest in the **Sovereign Mohawk Protocol**! We are building
-a decentralized spatial operating system where data sovereignty is a right, not
-a feature. By contributing, you are helping scale a coordinator-less,
-privacy-preserving network to 10 million nodes.
+This repository contains:
+- A browser-based operations dashboard (`index.html`, `styles.css`, `app.js`, `manifesto.html`)
+- A Python Flower security wrapper (`flower_security_wrapper/`)
+- CI/CD workflows under `.github/workflows/`
 
----
-
-## 🏆 The Audit Status & Points System
-
-To incentivize high-integrity contributions, we use a merit-based **Audit Points** system. Earning points grants you "Audit Status" within the community and
-determines eligibility for rewards within the
-[Sovereign-Mohawk-Proto](https://github.com/rwilliamspbg-ops/Sovereign-Mohawk-Proto)
-ecosystem.
-
-### Priority Tracks & Point Values
-
-| Track | Role | Goal | Points |
-| :--- | :--- | :--- | :--- |
-| **🛡️ Audit & Verify** | Cryptographer | Verify Theorems 1-6 or audit zk-SNARK logic. | **100** |
-| **🏗️ Hardware Port** | Edge Engineer | Port node-agent to NPUs (e.g., Jetson, Apple Silicon). | **50** |
-| **🐍 SDK Expansion** | Python Dev | Build wrappers or [SDK Python examples](./sdk/python/examples). | **25** |
-| **📝 Documentation** | Any | Fix typos, improve READMEs, or clarify technical specs. | **5** |
-
----
-
-## 🛠️ How to Contribute
-
-### 1. Claim a "Master Auditor" Task
-
-Browse our [GitHub Issues](https://github.com/rwilliamspbg-ops/Sovereign-Mohawk-Proto/issues)
-for the `Master Auditor` or `priority` labels. We are currently seeking:
-
-* **Theorem 5 Verification:** Stress-test ZK-proofs against Round 45 logs.
-* **NPU Optimization:** FFI bindings for **85+ TOPS** hardware.
-
-### 2. Use Professional Templates
-
-Your PR must include a completed template to be eligible for points:
-
-* [Cryptographic Audit Template](./proofs/audit_verification.md)
-* [Hardware Porting Template](./proofs/hardware_port.md)
-
-### 3. Submission & Linting
-
-1. **Fork** the repository and create a feature branch (`git checkout -b feat/your-contribution`).
-2. **Implement** your changes following the [SGP-001 Privacy Standard](https://github.com/rwilliamspbg-ops/Sovereign-Mohawk-Proto#trust--verification).
-3. **Lint & Test**: Run `black`, `ruff`, and `mypy` on any Python changes to ensure they pass the [CI/CD Workflow](https://github.com/rwilliamspbg-ops/Sovereign-Mohawk-Proto/actions).
-4. **Submit PR**: Tag your PR with `[AUDIT]` to trigger the verification runner.
-
-### Local Run and Test Quickstart
-
-Use these commands before opening a PR:
+## Development Setup
 
 ```bash
-source scripts/ensure_go_toolchain.sh
-make lint
-make test
+cd flower_security_wrapper
+python -m pip install --upgrade pip
+pip install -r requirements-dev.txt
+pip install -e .
 ```
 
-If you touched Python SDK code:
+## Validate Before PR
+
+Run from the repository root unless noted.
+
+1. Lint Python wrapper code:
 
 ```bash
-cd sdk/python
-python -m pip install -e .[dev]
-pytest -q
+ruff check flower_security_wrapper
 ```
 
-### Branch Naming Conventions
-
-Use short, scoped branch names:
-
-* `feat/<topic>` for new functionality
-* `fix/<topic>` for bug fixes
-* `perf/<topic>` for benchmark or latency work
-* `docs/<topic>` for documentation only
-* `ci/<topic>` for workflow and automation changes
-
-### Go Toolchain Guard (Required)
-
-This repository requires Go `1.25.9` from `go.mod`.
-
-Before running `go`, `make lint`, `make verify`, or benchmark commands, source:
+2. Run tests and generate evidence artifacts:
 
 ```bash
-source scripts/ensure_go_toolchain.sh
+pytest flower_security_wrapper/tests \
+  --junitxml=flower_security_wrapper/junit.xml \
+  --cov=flower_security_wrapper/security_wrapper \
+  --cov-report=xml:flower_security_wrapper/coverage.xml
 ```
 
-Why:
-
-* Prevents mixed `go`/`compile` toolchains.
-* Enforces minimum required Go version.
-* Automatically selects the cached repository-compatible toolchain path when available.
-
-### 4. Optional Chat Notifications for Weekly Readiness Digest
-
-Maintainers can wire the `Weekly Readiness Digest` workflow to Slack and/or Teams.
-
-Configure repository secrets in **Settings → Secrets and variables → Actions**:
-
-* `SLACK_WEBHOOK_URL`
-* `TEAMS_WEBHOOK_URL`
-
-If unset, the notification step is skipped and digest artifacts are still published.
-
-### 5. Benchmark Workflow for Runtime Changes
-
-If your PR changes aggregation, accelerator, or performance-critical paths, include benchmark evidence.
-
-1. Run the Go FedAvg benchmark matrix locally:
+3. Build and validate package metadata:
 
 ```bash
-TOOLROOT=/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.25.9.linux-amd64 \
-GOROOT=$TOOLROOT PATH=$TOOLROOT/bin:$PATH GOTOOLCHAIN=local \
-go test ./test -run '^$' -bench BenchmarkAggregateParallel -benchmem -benchtime=200ms
+cd flower_security_wrapper
+python -m build
+twine check dist/*
 ```
 
-1. Generate base-vs-current benchmark comparison:
+4. Optional: run frontend demo locally:
 
 ```bash
-TOOLROOT=/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.25.9.linux-amd64 \
-BASE_REF=origin/main BENCH_TIME=200ms BENCH_COUNT=10 \
-USE_BENCHSTAT=always BENCHSTAT_ALPHA=0.01 \
-REPORT_PATH=results/metrics/fedavg_benchmark_compare.md \
-./scripts/benchmark_fedavg_compare.sh
+cd /workspaces/Sovereign_Mohawk_Oncology_Global
+python3 -m http.server 8080
 ```
 
-1. Attach or reference benchmark evidence in your PR:
-
-* Local report: `results/metrics/fedavg_benchmark_compare.md`
-* CI artifact: `fedavg-benchmark-report` from workflow `FedAvg Benchmark Compare`
-
-### 6. Run the Full 10-Node Stack Locally
-
-Use this when validating swarm-scale behavior before opening a PR:
+5. Optional: run demo with backend-fed HUD state:
 
 ```bash
-./genesis-launch.sh --all-nodes
-docker compose -f docker-compose.full.yml up -d --scale node-agent=10
+cd /workspaces/Sovereign_Mohawk_Oncology_Global/flower_security_wrapper
+python example_server.py --serve
 ```
 
-When scaling `node-agent`, set cert pool size to at least the replica count:
+## CI Workflows
 
-```bash
-MOHAWK_TPM_CLIENT_CERT_POOL_SIZE=10 docker compose -f docker-compose.full.yml up -d --scale node-agent=10
-```
+- `.github/workflows/ci.yml`: lint, test, build, artifact upload
+- `.github/workflows/pages.yml`: publish dashboard bundle to GitHub Pages (when enabled)
+- `.github/workflows/beta-artifacts.yml`: capture beta release artifacts on `beta-*` tags or manual trigger
+- `.github/workflows/release-drafter.yml`: maintain release drafts on `main`
 
-The scaled profile is fail-fast: replicas exit if their per-replica cert/key is missing.
+## Scope Guidelines
 
-Common pitfalls and fixes:
+- Keep changes focused. Avoid mixing unrelated frontend/backend/docs refactors in one PR.
+- If you change policy semantics, include matching test updates in `flower_security_wrapper/tests/`.
+- If you change HUD labels or behavior, update docs in `README.md`.
+- Do not commit secrets, private keys, or PHI-like data.
 
-* TPM secret material missing in Docker volume:
-  * Run `docker compose run --rm runtime-secrets-init` before starting the stack.
-* Port conflicts (`3000`, `8080`, `9090`, `9093`, `9102`, `9104`):
-  * Run `docker compose down -v` and stop local processes already bound to those ports.
-* Stale runtime secrets from previous runs:
-  * Remove old files under `runtime-secrets/` and re-run `./genesis-launch.sh --all-nodes`.
-* Low host UDP/socket buffers causing readiness warnings:
-  * Run `scripts/validate_host_network_tuning.sh` and then apply via `sudo bash scripts/host_tuning.sh --persist`.
-* Docker Desktop + TPM flow mismatch on non-Linux hosts:
-  * Use `make strict-auth-smoke-container` to validate the glibc path in a reproducible container.
+## Branch and PR Guidance
 
----
+- Branch naming:
+  - `feat/<topic>`
+  - `fix/<topic>`
+  - `docs/<topic>`
+  - `ci/<topic>`
 
-## 📜 Standards
+- PR checklist:
+  - Tests pass locally
+  - Lint passes locally
+  - Docs updated if behavior changed
+  - CI artifacts still generated (`junit.xml`, `coverage.xml`, package build)
 
-* **Privacy First:** Never include raw data in logs. Use the [SGP-001](https://github.com/rwilliamspbg-ops/Sovereign-Mohawk-Proto) scrubbers.
-* **Complexity:** PRs must not increase the $O(d \log n)$ communication complexity verified in [PERFORMANCE.md](https://github.com/rwilliamspbg-ops/Sovereign-Mohawk-Proto/blob/main/PERFORMANCE.md).
+## License
 
----
-
-## ⚖️ Licensing & IP Notice for Contributors
-
-Contributor recognition and point awards are tracked in [CONTRIBUTORS.md](CONTRIBUTORS.md) and mirrored in [DASHBOARD.md](DASHBOARD.md).
-
-* **Project License:** Contributions to this repository are accepted under the Apache License 2.0. See [LICENSE.md](LICENSE.md).
-* **Patent Context:** The protocol includes components marked as **Patent Pending** (U.S. provisional filing, March 2026).
-* **No Additional IP Grant by Docs:** This notice is informational and does not modify Apache-2.0 terms in [LICENSE.md](LICENSE.md).
-* **Canonical Legal Summary:** See [NOTICE.md](NOTICE.md) for consolidated licensing, IP disclosure, and trademark guidance.
-* **By submitting a PR:** You confirm you have rights to submit the contribution and that submission is under repository license terms.
-
----
-
-## 🔗 Connect with the Architects
-
-* **Bitcointalk:** [Six-Theorem Formal Verification Thread](https://bitcointalk.org/index.php?topic=5575025.0)
-* **Reddit:** [r/SovereignMap Community](https://www.reddit.com/user/Famous_Aardvark_8595/)
+By contributing, you agree your changes are provided under the repository license in `LICENSE`.

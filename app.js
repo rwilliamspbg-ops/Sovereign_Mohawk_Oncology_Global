@@ -63,6 +63,11 @@ const regionNodes = [
   { name: "Oceania", nodes: 3, availability: 98.7 }
 ];
 
+const totalNodeCount = regionNodes.reduce((sum, region) => sum + region.nodes, 0);
+const healthyRegionCount = regionNodes.filter((region) => region.availability >= 97).length;
+const hudStateEndpoint = window.__MOHAWK_HUD_STATE_ENDPOINT__ || "/api/v1/hud/state";
+const dashboardStorageKey = "sovereign-mohawk-dashboard-state-v2";
+
 const pipelineStages = [
   "LOCAL NODE AGENT",
   "DP GRADIENT CLIP",
@@ -122,6 +127,7 @@ function renderSection(sectionKey) {
   const info = sections[sectionKey];
   sectionTitle.textContent = info.title;
   sectionSubtitle.textContent = info.subtitle;
+  demoState.currentSection = sectionKey;
 
   document.querySelectorAll("[data-view]").forEach((panel) => {
     panel.hidden = panel.dataset.view !== sectionKey;
@@ -137,6 +143,16 @@ function renderSection(sectionKey) {
       contentRoot.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }
+
+  if (sectionKey === "dashboard") {
+    syncHudSnapshot();
+  }
+
+  if (sectionKey === "metrics") {
+    refreshMetricsPanel();
+  }
+
+  persistDashboardSnapshot();
 }
 
 nav.addEventListener("click", (event) => {
@@ -158,10 +174,15 @@ regionNodes.forEach((region) => {
   node.className = "node";
   node.textContent = `${region.name} (${region.nodes})`;
   node.addEventListener("click", () => {
-    nodeDetail.textContent = `${region.name}: ${region.nodes} active research nodes, ${region.availability.toFixed(1)}% availability, secure aggregation quorum healthy.`;
+    nodeDetail.textContent = `${region.name}: ${region.nodes} simulated nodes, ${region.availability.toFixed(1)}% availability, aggregated over ${totalNodeCount} nodes and ${healthyRegionCount} healthy regions.`;
+    persistDashboardSnapshot();
   });
   nodeMap.appendChild(node);
 });
+
+if (nodeDetail) {
+  nodeDetail.textContent = `Aggregated demo topology: ${totalNodeCount} simulated nodes across ${regionNodes.length} regions.`;
+}
 
 const pipelineEl = document.getElementById("pipeline-stages");
 pipelineStages.forEach((stage, idx) => {
@@ -236,19 +257,297 @@ const runtimeAutoScrollEl = document.getElementById("runtime-auto-scroll");
 const runtimeClearEl = document.getElementById("runtime-clear");
 
 const hudStreamStatusEl = document.getElementById("hud-stream-status");
+const hudPolicyProfileEl = document.getElementById("hud-policy-profile");
+const hudAttestModeEl = document.getElementById("hud-attest-mode");
+const hudNonceStoreEl = document.getElementById("hud-nonce-store");
 const hudRoundStatusEl = document.getElementById("hud-round-status");
+const hudAuditStatusEl = document.getElementById("hud-audit-status");
+const hudAlertSourceEl = document.getElementById("hud-alert-source");
 const hudAlertStatusEl = document.getElementById("hud-alert-status");
+const hudNodeCoverageEl = document.getElementById("hud-node-coverage");
+const hudLastEventEl = document.getElementById("hud-last-event");
+const hudLastSyncEl = document.getElementById("hud-last-sync");
+const dashboardReplayButton = document.getElementById("dashboard-replay");
+const dashboardResetButton = document.getElementById("dashboard-reset");
 
-let runtimeRound = 0;
+const demoState = {
+  streamStatus: "CONNECTED",
+  auditStatus: "LIVE",
+  policyProfile: "RARE-DISEASE",
+  attestationMode: "ED25519 QUOTE",
+  nonceStore: "SQLITE",
+  alertSource: "governance-contract",
+  alertStatus: "NORMAL",
+  coverageSummary: `Coverage: ${totalNodeCount} simulated nodes across ${regionNodes.length} regions`,
+  backendSource: "frontend-runtime",
+  backendUpdatedAt: "",
+  currentSection: "dashboard",
+  lastRuntimeEvent: "Awaiting first runtime tick",
+  lastAuditEvent: "Awaiting first audit tick",
+  lastSync: new Date().toISOString(),
+  epsilon: 0.62,
+  round: 0
+};
+
+const schedulerState = {
+  runtimeMs: 0,
+  auditMs: 0,
+  metricsMs: 0,
+  epsilonMs: 0,
+  hudMs: 0
+};
+
+const schedulerIntervals = {
+  runtime: 3000,
+  audit: 3000,
+  metrics: 2000,
+  epsilon: 2800,
+  hud: 1000
+};
+
+function isViewVisible(viewKey) {
+  return Array.from(document.querySelectorAll(`[data-view="${viewKey}"]`)).some((panel) => !panel.hidden);
+}
+
+function readDashboardSnapshot() {
+  try {
+    const raw = window.localStorage.getItem(dashboardStorageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeDashboardSnapshot(snapshot) {
+  try {
+    window.localStorage.setItem(dashboardStorageKey, JSON.stringify(snapshot));
+  } catch {
+    // Ignore storage failures in private-mode or locked-down browsers.
+  }
+}
+
+function normalizeLabel(value) {
+  return String(value || "").trim().replace(/_/g, " ").replace(/\s+/g, " ").toUpperCase();
+}
+
+function normalizePolicyProfile(value) {
+  return String(value || "").trim().replace(/[_\.]+/g, "-").replace(/\s+/g, "-").toUpperCase();
+}
+
+function normalizeBackendHudState(payload) {
+  const policyFile = String(payload?.policy_file || "").trim();
+  const policyStem = policyFile.split(/[\\/]/).pop()?.replace(/\.json$/i, "") || "";
+  const policyProfileRaw = String(payload?.policy_profile || "").trim() || policyStem.replace(/^policy[._-]?/i, "") || "RARE-DISEASE";
+  const attestationMode = normalizeLabel(payload?.attestation_mode || "ed25519_quote") || "ED25519 QUOTE";
+  const nonceStoreMode = normalizeLabel(payload?.nonce_store_mode || "sqlite") || "SQLITE";
+
+  return {
+    policyProfile: normalizePolicyProfile(policyProfileRaw) || "RARE-DISEASE",
+    policyFile,
+    attestationMode,
+    nonceStoreMode,
+    alertSource: String(payload?.alert_source || "governance-contract").trim() || "governance-contract",
+    coverageSummary: payload?.node_coverage?.coverage_label
+      || (payload?.node_coverage
+        ? `Coverage: ${payload.node_coverage.total_nodes || totalNodeCount} backend nodes across ${payload.node_coverage.region_count || regionNodes.length} regions`
+      : demoState.coverageSummary,
+    backendSource: String(payload?.source || "backend-api").trim() || "backend-api",
+    backendUpdatedAt: String(payload?.updated_at || new Date().toISOString()).trim(),
+  };
+}
+
+function persistDashboardSnapshot() {
+  let snapshotFeed = "throughput";
+  let snapshotWindow = 60;
+  let snapshotMetricData = [];
+  try {
+    snapshotFeed = activeFeed;
+    snapshotWindow = activeWindow;
+  } catch {
+    // Metric state may not be initialized during early bootstrap.
+  }
+
+  try {
+    snapshotMetricData = Array.isArray(metricData) ? metricData : [];
+  } catch {
+    snapshotMetricData = [];
+  }
+
+  writeDashboardSnapshot({
+    version: 1,
+    currentSection: demoState.currentSection,
+    activeFeed: snapshotFeed,
+    activeWindow: snapshotWindow,
+    runtimeLines: runtimeLog?._lines || [],
+    auditLines: auditLog?._lines || [],
+    metricData: snapshotMetricData,
+    nodeDetail: nodeDetail ? nodeDetail.textContent : "",
+    nodeCoverage: hudNodeCoverageEl ? hudNodeCoverageEl.textContent : "",
+    demoState: {
+      streamStatus: demoState.streamStatus,
+      auditStatus: demoState.auditStatus,
+      policyProfile: demoState.policyProfile,
+      attestationMode: demoState.attestationMode,
+      nonceStore: demoState.nonceStore,
+      alertSource: demoState.alertSource,
+      alertStatus: demoState.alertStatus,
+      coverageSummary: demoState.coverageSummary,
+      backendSource: demoState.backendSource,
+      backendUpdatedAt: demoState.backendUpdatedAt,
+      lastRuntimeEvent: demoState.lastRuntimeEvent,
+      lastAuditEvent: demoState.lastAuditEvent,
+      lastSync: demoState.lastSync,
+      epsilon: demoState.epsilon,
+      round: demoState.round,
+    },
+    savedAt: new Date().toISOString(),
+  });
+}
+
+function restoreDashboardSnapshot() {
+  const snapshot = readDashboardSnapshot();
+  if (!snapshot) return null;
+
+  if (snapshot.demoState && typeof snapshot.demoState === "object") {
+    Object.assign(demoState, snapshot.demoState);
+  }
+
+  if (Array.isArray(snapshot.runtimeLines)) {
+    runtimeLog._lines = snapshot.runtimeLines.slice(-250);
+    runtimeLog.textContent = `${runtimeLog._lines.join("\n")}\n`;
+  }
+
+  if (Array.isArray(snapshot.auditLines)) {
+    auditLog._lines = snapshot.auditLines.slice(-250);
+    auditLog.textContent = `${auditLog._lines.join("\n")}\n`;
+  }
+
+  if (Array.isArray(snapshot.metricData)) {
+    metricData.length = 0;
+    snapshot.metricData.slice(-120).forEach((point) => metricData.push(point));
+  }
+
+  if (typeof snapshot.nodeDetail === "string" && snapshot.nodeDetail) {
+    nodeDetail.textContent = snapshot.nodeDetail;
+  }
+
+  if (typeof snapshot.nodeCoverage === "string" && snapshot.nodeCoverage) {
+    demoState.coverageSummary = snapshot.nodeCoverage;
+  }
+
+  if (typeof snapshot.currentSection === "string" && snapshot.currentSection) {
+    demoState.currentSection = snapshot.currentSection;
+  }
+
+  if (typeof snapshot.activeFeed === "string" && snapshot.activeFeed in metricFeeds) {
+    activeFeed = snapshot.activeFeed;
+  }
+
+  if (Number(snapshot.activeWindow) && metricWindows[Number(snapshot.activeWindow)]) {
+    activeWindow = Number(snapshot.activeWindow);
+  }
+
+  updateMetricButtons?.();
+  if (demoState.currentSection) {
+    renderSection(demoState.currentSection);
+  }
+  syncHudSnapshot();
+  refreshMetricsPanel();
+  return snapshot;
+}
+
+async function loadBackendHudState() {
+  try {
+    const response = await fetch(hudStateEndpoint, { headers: { Accept: "application/json" } });
+    if (!response.ok) {
+      throw new Error(`HUD state request failed with ${response.status}`);
+    }
+    const payload = await response.json();
+    const backendState = normalizeBackendHudState(payload);
+    Object.assign(demoState, {
+      policyProfile: backendState.policyProfile,
+      attestationMode: backendState.attestationMode,
+      nonceStore: backendState.nonceStoreMode,
+      alertSource: backendState.alertSource,
+      coverageSummary: backendState.coverageSummary,
+      backendSource: backendState.backendSource,
+      backendUpdatedAt: backendState.backendUpdatedAt,
+    });
+    syncHudSnapshot();
+    persistDashboardSnapshot();
+  } catch (error) {
+    demoState.backendSource = "frontend-fallback";
+    persistDashboardSnapshot();
+  }
+}
 
 function appendLog(container, line) {
   const ts = new Date().toISOString().slice(11, 19);
-  const next = `[${ts}] ${line}\n` + container.textContent;
-  const rows = next.split("\n").filter(Boolean).slice(0, 250);
-  container.textContent = `${rows.join("\n")}\n`;
+  const next = `[${ts}] ${line}`;
+  const lines = container._lines || [];
+  lines.push(next);
+  if (lines.length > 250) {
+    lines.splice(0, lines.length - 250);
+  }
+  container._lines = lines;
+  container.textContent = `${lines.join("\n")}\n`;
+  persistDashboardSnapshot();
 }
 
-setInterval(() => {
+function setHudChip(element, label, value, meta, state = "") {
+  if (!element) return;
+  element.className = state ? `status-chip ${state}` : "status-chip";
+  element.innerHTML = `
+    <span class="chip-label">${label}</span>
+    <strong class="chip-value">${value}</strong>
+    <span class="chip-meta">${meta}</span>
+  `;
+}
+
+function syncHudSnapshot() {
+  demoState.lastSync = new Date().toISOString();
+
+  setHudChip(hudStreamStatusEl, "Stream", demoState.streamStatus, "Runtime log feed");
+  setHudChip(hudPolicyProfileEl, "Policy", demoState.policyProfile, "Policy bundle active");
+  setHudChip(hudAttestModeEl, "Attestation", demoState.attestationMode, "Signed quote verification");
+  setHudChip(hudNonceStoreEl, "Nonce Store", demoState.nonceStore, "Replay protection");
+  setHudChip(hudRoundStatusEl, "Round", String(demoState.round), "Training rounds processed");
+  setHudChip(hudAuditStatusEl, "Audit", demoState.auditStatus, "Audit stream state", demoState.auditStatus === "PAUSED" ? "warn" : "");
+  setHudChip(hudAlertSourceEl, "Alert Source", demoState.alertSource, `Backend: ${demoState.backendSource}`);
+  setHudChip(hudAlertStatusEl, "Alert", demoState.alertStatus, "Latest health verdict", demoState.alertStatus === "CRITICAL" ? "critical" : demoState.alertStatus === "WARN" ? "warn" : "");
+
+  if (hudNodeCoverageEl) {
+    hudNodeCoverageEl.textContent = demoState.coverageSummary;
+  }
+
+  if (hudLastEventEl) {
+    hudLastEventEl.textContent = `Last event: ${demoState.lastRuntimeEvent}`;
+  }
+
+  if (hudLastSyncEl) {
+    const backendStamp = demoState.backendUpdatedAt ? ` | Backend ${new Date(demoState.backendUpdatedAt).toLocaleTimeString([], { hour12: false })} UTC` : "";
+    hudLastSyncEl.textContent = `Updated: ${new Date(demoState.lastSync).toLocaleTimeString([], { hour12: false })} UTC${backendStamp}`;
+  }
+
+  persistDashboardSnapshot();
+}
+
+function refreshMetricsPanel() {
+  updateAlarmAndBottom();
+  if (isViewVisible("metrics")) {
+    drawChart();
+  }
+}
+
+function bootstrapDashboardState() {
+  restoreDashboardSnapshot();
+  syncHudSnapshot();
+  loadBackendHudState();
+}
+
+function emitRuntimeEvent() {
   const evt = runtimeEvents[Math.floor(Math.random() * runtimeEvents.length)];
   const hideRoutine = runtimeHideRoutineEl ? runtimeHideRoutineEl.checked : false;
   const focus = runtimeFocusEl ? runtimeFocusEl.value : "all";
@@ -264,21 +563,116 @@ setInterval(() => {
   }
 
   if (evt.kind === "training_round") {
-    runtimeRound += 1;
+    demoState.round += 1;
     if (hudRoundStatusEl) {
-      hudRoundStatusEl.textContent = `Round: ${runtimeRound}`;
+      setHudChip(hudRoundStatusEl, "Round", String(demoState.round), "Training rounds processed");
     }
   }
 
-  appendLog(runtimeLog, `[${evt.kind.toUpperCase()}][${evt.severity.toUpperCase()}] ${evt.message}`);
+  demoState.lastRuntimeEvent = `[${evt.kind.toUpperCase()}][${evt.severity.toUpperCase()}] ${evt.message}`;
+  appendLog(runtimeLog, demoState.lastRuntimeEvent);
   if (runtimeAutoScrollEl?.checked) {
     runtimeLog.scrollTop = runtimeLog.scrollHeight;
   }
-}, 3000);
+}
+
+function emitAuditEvent() {
+  if (auditPaused) return;
+  const eventLine = auditEvents[Math.floor(Math.random() * auditEvents.length)];
+  demoState.lastAuditEvent = eventLine;
+  appendLog(auditLog, eventLine);
+}
+
+function refreshEpsilonMeter() {
+  demoState.epsilon = Math.max(0.35, Math.min(0.92, demoState.epsilon + (Math.random() - 0.45) * 0.03));
+  epsilon = demoState.epsilon;
+  if (epsValueEl) {
+    epsValueEl.textContent = `${demoState.epsilon.toFixed(2)} / 0.80`;
+  }
+  if (epsMeter) {
+    epsMeter.style.width = `${Math.min(100, (demoState.epsilon / 0.8) * 100).toFixed(1)}%`;
+  }
+}
+
+function schedulerTick() {
+  schedulerState.runtimeMs += 1000;
+  schedulerState.auditMs += 1000;
+  schedulerState.metricsMs += 1000;
+  schedulerState.epsilonMs += 1000;
+  schedulerState.hudMs += 1000;
+
+  if (schedulerState.runtimeMs >= schedulerIntervals.runtime) {
+    schedulerState.runtimeMs -= schedulerIntervals.runtime;
+    emitRuntimeEvent();
+  }
+
+  if (schedulerState.auditMs >= schedulerIntervals.audit) {
+    schedulerState.auditMs -= schedulerIntervals.audit;
+    emitAuditEvent();
+  }
+
+  if (schedulerState.metricsMs >= schedulerIntervals.metrics) {
+    schedulerState.metricsMs -= schedulerIntervals.metrics;
+    metricData.push({ t: Date.now(), value: nextMetricValue() });
+    const maxPoints = Math.max(15, Math.floor(activeWindow / 2));
+    if (metricData.length > maxPoints) metricData.shift();
+    refreshMetricsPanel();
+  }
+
+  if (schedulerState.epsilonMs >= schedulerIntervals.epsilon) {
+    schedulerState.epsilonMs -= schedulerIntervals.epsilon;
+    refreshEpsilonMeter();
+  }
+
+  if (schedulerState.hudMs >= schedulerIntervals.hud) {
+    schedulerState.hudMs -= schedulerIntervals.hud;
+    syncHudSnapshot();
+  }
+}
+
+syncHudSnapshot();
+
+setInterval(schedulerTick, 1000);
+setInterval(loadBackendHudState, 30000);
+
+if (dashboardReplayButton) {
+  dashboardReplayButton.addEventListener("click", () => {
+    restoreDashboardSnapshot();
+    syncHudSnapshot();
+    refreshMetricsPanel();
+  });
+}
+
+if (dashboardResetButton) {
+  dashboardResetButton.addEventListener("click", () => {
+    try {
+      window.localStorage.removeItem(dashboardStorageKey);
+    } catch {
+      // Ignore storage failures.
+    }
+    runtimeLog.textContent = "";
+    runtimeLog._lines = [];
+    auditLog.textContent = "";
+    auditLog._lines = [];
+    metricData.length = 0;
+    demoState.round = 0;
+    demoState.epsilon = 0.62;
+    demoState.lastRuntimeEvent = "Awaiting first runtime tick";
+    demoState.lastAuditEvent = "Awaiting first audit tick";
+    demoState.coverageSummary = `Coverage: ${totalNodeCount} simulated nodes across ${regionNodes.length} regions`;
+    nodeDetail.textContent = `Aggregated demo topology: ${totalNodeCount} simulated nodes across ${regionNodes.length} regions.`;
+    renderSection("dashboard");
+    syncHudSnapshot();
+    updateMetricButtons();
+    drawChart();
+    loadBackendHudState();
+  });
+}
 
 if (runtimeClearEl) {
   runtimeClearEl.addEventListener("click", () => {
     runtimeLog.textContent = "";
+    runtimeLog._lines = [];
     appendLog(runtimeLog, "terminal: runtime log cleared by operator");
   });
 }
@@ -293,12 +687,6 @@ const auditEvents = [
 
 let auditPaused = false;
 
-setInterval(() => {
-  if (auditPaused) return;
-  const eventLine = auditEvents[Math.floor(Math.random() * auditEvents.length)];
-  appendLog(auditLog, eventLine);
-}, 3000);
-
 const auditPauseButton = document.getElementById("audit-stream-pause");
 const auditClearButton = document.getElementById("audit-stream-clear");
 
@@ -306,8 +694,9 @@ if (auditPauseButton) {
   auditPauseButton.addEventListener("click", () => {
     auditPaused = !auditPaused;
     auditPauseButton.textContent = auditPaused ? "Resume Audit" : "Pause Audit";
-    if (hudStreamStatusEl) {
-      hudStreamStatusEl.textContent = auditPaused ? "Stream: PAUSED" : "Stream: CONNECTED";
+    demoState.auditStatus = auditPaused ? "PAUSED" : "LIVE";
+    if (hudAuditStatusEl) {
+      setHudChip(hudAuditStatusEl, "Audit", demoState.auditStatus, "Audit stream state", auditPaused ? "warn" : "");
     }
     appendLog(
       auditLog,
@@ -315,24 +704,21 @@ if (auditPauseButton) {
         ? "audit-stream: paused by operator"
         : "audit-stream: resumed by operator"
     );
+    syncHudSnapshot();
   });
 }
 
 if (auditClearButton) {
   auditClearButton.addEventListener("click", () => {
     auditLog.textContent = "";
+    auditLog._lines = [];
     appendLog(auditLog, "audit-stream: cleared by operator");
   });
 }
 
 const epsValueEl = document.getElementById("eps-value");
 const epsMeter = document.getElementById("eps-meter");
-let epsilon = 0.62;
-setInterval(() => {
-  epsilon = Math.max(0.35, Math.min(0.92, epsilon + (Math.random() - 0.45) * 0.03));
-  epsValueEl.textContent = `${epsilon.toFixed(2)} / 0.80`;
-  epsMeter.style.width = `${Math.min(100, (epsilon / 0.8) * 100).toFixed(1)}%`;
-}, 2800);
+let epsilon = demoState.epsilon;
 
 const diseaseFilter = document.getElementById("disease-filter");
 diseaseFilter.addEventListener("click", (event) => {
@@ -391,6 +777,7 @@ Object.keys(metricFeeds).forEach((key) => {
     activeFeed = key;
     metricData.length = 0;
     updateMetricButtons();
+    persistDashboardSnapshot();
   });
   feedContainer.appendChild(b);
 });
@@ -402,6 +789,7 @@ Object.keys(metricWindows).forEach((key) => {
   b.addEventListener("click", () => {
     activeWindow = Number(key);
     updateMetricButtons();
+    persistDashboardSnapshot();
   });
   windowContainer.appendChild(b);
 });
@@ -414,6 +802,8 @@ function updateMetricButtons() {
     el.classList.toggle("active", Number(Object.keys(metricWindows)[i]) === activeWindow);
   });
 }
+
+bootstrapDashboardState();
 
 function nextMetricValue() {
   const feed = metricFeeds[activeFeed];
@@ -449,7 +839,7 @@ function drawChart() {
 function updateAlarmAndBottom() {
   const apacAvailability = 94 + Math.random() * 6;
   const sandboxViolations = Math.random() > 0.78 ? Math.floor(Math.random() * 3) + 1 : 0;
-  const epsPct = (epsilon / 0.8) * 100;
+  const epsPct = (demoState.epsilon / 0.8) * 100;
 
   let cls = "ok";
   let label = "Status: NORMAL";
@@ -463,27 +853,21 @@ function updateAlarmAndBottom() {
 
   alarmBanner.className = `alarm ${cls}`;
   alarmBanner.textContent = label;
+  demoState.alertStatus = cls === "ok" ? "NORMAL" : cls.toUpperCase();
 
   if (hudAlertStatusEl) {
-    hudAlertStatusEl.className = `status-chip ${cls === "ok" ? "" : cls}`.trim();
-    hudAlertStatusEl.textContent = `Alert: ${cls.toUpperCase()}`;
+    setHudChip(hudAlertStatusEl, "Alert", demoState.alertStatus, "Latest health verdict", cls === "ok" ? "" : cls);
   }
 
-  metricBottom.innerHTML = `
-    <div class="metric-pill">N. America Availability: ${(97 + Math.random() * 2).toFixed(2)}%</div>
-    <div class="metric-pill">Europe Availability: ${(97.2 + Math.random() * 1.9).toFixed(2)}%</div>
-    <div class="metric-pill">Asia-Pacific Availability: ${apacAvailability.toFixed(2)}%</div>
-    <div class="metric-pill">Wasm Sandbox Violations: <strong style="color:${sandboxViolations ? "#b62835" : "#185423"}">${sandboxViolations}</strong></div>
-  `;
+  if (metricBottom && isViewVisible("metrics")) {
+    metricBottom.innerHTML = `
+      <div class="metric-pill">N. America Availability: ${(97 + Math.random() * 2).toFixed(2)}%</div>
+      <div class="metric-pill">Europe Availability: ${(97.2 + Math.random() * 1.9).toFixed(2)}%</div>
+      <div class="metric-pill">Asia-Pacific Availability: ${apacAvailability.toFixed(2)}%</div>
+      <div class="metric-pill">Wasm Sandbox Violations: <strong style="color:${sandboxViolations ? "#b62835" : "#185423"}">${sandboxViolations}</strong></div>
+    `;
+  }
 }
-
-setInterval(() => {
-  metricData.push({ t: Date.now(), value: nextMetricValue() });
-  const maxPoints = Math.max(15, Math.floor(activeWindow / 2));
-  if (metricData.length > maxPoints) metricData.shift();
-  drawChart();
-  updateAlarmAndBottom();
-}, 2000);
 
 const dpiaSteps = [
   "Processing Description",

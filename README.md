@@ -16,7 +16,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Manifesto](https://img.shields.io/badge/Manifesto-Genesis%20v1.0-black)](manifesto.html)
 
-a comprehensive healthcare app for cancer and disease research with full HIPAA/GDPR compliance mapping
+a comprehensive healthcare demo for cancer and disease research with HIPAA/GDPR-aligned control mapping and simulated federated telemetry
 
 ## Full-Stack Scope
 
@@ -45,7 +45,7 @@ Key references:
 - Governance Readiness Gates: optional readiness signal gates layered into deterministic governance admission checks ([governance contract](flower_security_wrapper/security_wrapper/governance_contract.py)).
 - Round Benchmark Hooks: per-round performance and rejection breakdown telemetry with optional callback hook for observability pipelines ([wrapper strategy](flower_security_wrapper/security_wrapper/wrapper.py)).
 - Compliance Mapping: direct evidence links for HIPAA and GDPR controls ([Compliance Evidence](docs/beta/COMPLIANCE_EVIDENCE.md), [Beta Release Plan](docs/beta/BETA_RELEASE.md)).
-- Interactive Dashboard: built-in 47-node global map simulation with click-through interactions across federated regions ([dashboard entry point](index.html)).
+- Interactive Dashboard: built-in 47-node aggregated regional map simulation with click-through interactions across federated regions ([dashboard entry point](index.html)).
 - DPIA Generator: built-in GDPR impact assessment workflow with validation and draft report generation ([dashboard section in app](app.js), [compliance evidence](docs/beta/COMPLIANCE_EVIDENCE.md)).
 
 ## Oncology Use Case
@@ -71,9 +71,11 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080` in your browser.
 
+To use the backend-fed HUD state endpoint, run `python flower_security_wrapper/example_server.py --serve` from `flower_security_wrapper/` and open the served site from that process.
+
 ## Included Modules
 
-- Dashboard with 47-node global map simulation and FL stage interaction
+- Dashboard with 47-node aggregated regional map simulation and FL stage interaction
 - Research Trials view with drill-down rows and disease filtering
 - FL Pipeline with live MOHAWK runtime-style log stream and capability allow/block lists
 - HIPAA/GDPR control mapping table (10 controls)
@@ -120,7 +122,7 @@ Then open `http://localhost:8080` in your browser.
 
 ## Notes
 
-- Runtime and metrics are simulated in-browser for demo/testing.
+- Runtime, metrics, and HUD state are simulated in-browser for demo/testing.
 - No PHI or external APIs are used in this prototype.
 
 ## Contributing
