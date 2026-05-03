@@ -10,8 +10,67 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <a class="skip-link" href="#operator-workspace">Skip to operator workspace</a>
   <div class="app-bg"></div>
-  <main class="layout">
+
+  <header class="site-shell">
+    <div class="site-shell__brand">
+      <p class="site-shell__kicker">Verified Semantic Runtime</p>
+      <h1>Sovereign MOHAWK Global Intelligence Stack</h1>
+      <p>From private AI infrastructure to formally verified cross-border intelligence for oncology and global disease collaboration.</p>
+      <div class="site-shell__actions">
+        <button id="open-workspace-btn" type="button" class="site-action site-action--primary">Open Operator Workspace</button>
+        <a class="site-action" href="docs/beta/COMPLIANCE_EVIDENCE.md" target="_blank" rel="noopener noreferrer">View Compliance Evidence</a>
+        <a class="site-action" href="manifesto.html" target="_blank" rel="noopener noreferrer">Read Genesis Manifesto</a>
+      </div>
+    </div>
+    <div class="site-shell__status" aria-label="Build and runtime trust signals">
+      <div class="trust-pill">CI: PASSING</div>
+      <div class="trust-pill">Profile: RARE-DISEASE</div>
+      <div class="trust-pill">Runtime: SEMANTIC + CLOSURE</div>
+      <div class="trust-pill">Gate: p95 SLO ENFORCED</div>
+    </div>
+  </header>
+
+  <section class="landing-experience" id="landing-experience">
+    <article class="landing-panel landing-panel--hero">
+      <h2>Clinical-grade federated intelligence with verifiable semantics</h2>
+      <p>Operate multi-region model collaboration with policy-gated updates, formal alignment constraints, and tamper-evident audit trails.</p>
+      <div class="landing-grid-actions">
+        <button id="open-workspace-btn-secondary" type="button" class="site-action site-action--primary">Launch Live Runtime</button>
+        <a class="site-action" href="docs/beta/RELEASE_READINESS_CHECKLIST.md" target="_blank" rel="noopener noreferrer">Release Readiness</a>
+      </div>
+    </article>
+
+    <article class="landing-panel">
+      <h3>Core Capability Layers</h3>
+      <ul class="landing-list">
+        <li>Semantic fragment validation at admission time</li>
+        <li>Constraint-closure and core alignment profile compilation</li>
+        <li>TPM/attestation, nonce replay defense, and slashing governance</li>
+      </ul>
+    </article>
+
+    <article class="landing-panel">
+      <h3>Operational Evidence</h3>
+      <ul class="landing-list">
+        <li><a href="docs/VERIFIED_RUNTIME_ROADMAP.md" target="_blank" rel="noopener noreferrer">Verified Runtime Roadmap</a></li>
+        <li><a href="docs/beta/BETA_RELEASE.md" target="_blank" rel="noopener noreferrer">Beta Release Plan</a></li>
+        <li><a href="docs/beta/RELEASE_READINESS_CHECKLIST.md" target="_blank" rel="noopener noreferrer">Go/No-Go Checklist</a></li>
+      </ul>
+    </article>
+  </section>
+
+  <section id="operator-workspace" class="operator-workspace" hidden>
+    <div class="operator-toolbar">
+      <button id="back-to-landing-btn" type="button" class="site-action">Back to Overview</button>
+      <div class="operator-toolbar__links">
+        <a class="site-action" href="docs/beta/COMPLIANCE_EVIDENCE.md" target="_blank" rel="noopener noreferrer">Compliance Evidence</a>
+        <a class="site-action" href="docs/beta/RELEASE_READINESS_CHECKLIST.md" target="_blank" rel="noopener noreferrer">Release Checklist</a>
+      </div>
+    </div>
+
+    <main class="layout" id="app-layout">
     <aside class="sidebar">
       <div class="brand">
         <h1>SOv-MOHAWK</h1>
@@ -483,7 +542,8 @@
         <button data-action="scc">Cross-border SCCs ↗</button>
       </div>
     </aside>
-  </main>
+    </main>
+  </section>
 
   <script src="app.js"></script>
 </body>

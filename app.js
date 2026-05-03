@@ -119,6 +119,12 @@ const consentItems = [
 const allowedCaps = ["read_model_weights", "write_clipped_gradient", "verify_manifest", "tpm_quote", "secure_agg_send"];
 const blockedCaps = ["open_network_socket", "raw_disk_read", "exec_host_process", "export_phi_payload"];
 
+const landingExperience = document.getElementById("landing-experience");
+const operatorWorkspace = document.getElementById("operator-workspace");
+const openWorkspaceBtn = document.getElementById("open-workspace-btn");
+const openWorkspaceBtnSecondary = document.getElementById("open-workspace-btn-secondary");
+const backToLandingBtn = document.getElementById("back-to-landing-btn");
+
 const nav = document.getElementById("main-nav");
 const sectionTitle = document.getElementById("section-title");
 const sectionSubtitle = document.getElementById("section-subtitle");
@@ -155,11 +161,63 @@ function renderSection(sectionKey) {
   persistDashboardSnapshot();
 }
 
+let schedulerIntervalId = null;
+let hudPollIntervalId = null;
+
+function startRuntimeSchedulers() {
+  if (schedulerIntervalId === null) {
+    schedulerIntervalId = setInterval(schedulerTick, 1000);
+  }
+  if (hudPollIntervalId === null) {
+    hudPollIntervalId = setInterval(loadBackendHudState, 30000);
+  }
+}
+
+function openOperatorWorkspace(sectionKey = "dashboard") {
+  if (operatorWorkspace) {
+    operatorWorkspace.hidden = false;
+  }
+  if (landingExperience) {
+    landingExperience.hidden = true;
+  }
+  document.body.classList.add("workspace-active");
+  renderSection(sectionKey);
+  startRuntimeSchedulers();
+  loadBackendHudState();
+  const appLayout = document.getElementById("app-layout");
+  if (appLayout) {
+    appLayout.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+function closeOperatorWorkspace() {
+  document.body.classList.remove("workspace-active");
+  if (landingExperience) {
+    landingExperience.hidden = false;
+  }
+  if (operatorWorkspace) {
+    operatorWorkspace.hidden = true;
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 nav.addEventListener("click", (event) => {
   const button = event.target.closest(".nav-item");
   if (!button) return;
   renderSection(button.dataset.section);
 });
+
+if (openWorkspaceBtn) {
+  openWorkspaceBtn.addEventListener("click", () => openOperatorWorkspace("dashboard"));
+}
+
+if (openWorkspaceBtnSecondary) {
+  openWorkspaceBtnSecondary.addEventListener("click", () => openOperatorWorkspace("dashboard"));
+}
+
+if (backToLandingBtn) {
+  backToLandingBtn.addEventListener("click", () => closeOperatorWorkspace());
+}
 
 document.querySelectorAll("[data-feature-nav]").forEach((button) => {
   button.addEventListener("click", () => {
@@ -632,9 +690,6 @@ function schedulerTick() {
 
 syncHudSnapshot();
 
-setInterval(schedulerTick, 1000);
-setInterval(loadBackendHudState, 30000);
-
 if (dashboardReplayButton) {
   dashboardReplayButton.addEventListener("click", () => {
     restoreDashboardSnapshot();
@@ -804,6 +859,11 @@ function updateMetricButtons() {
 }
 
 bootstrapDashboardState();
+
+const startupHash = window.location.hash.replace("#", "").trim().toLowerCase();
+if (startupHash === "ops" || startupHash === "workspace") {
+  openOperatorWorkspace("dashboard");
+}
 
 function nextMetricValue() {
   const feed = metricFeeds[activeFeed];
