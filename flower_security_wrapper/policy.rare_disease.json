@@ -35,6 +35,28 @@
   "min_gradient_cosine_similarity": 0.2,
   "max_krum_score": 10.0,
   "require_vector_consensus_checks": true,
+  "enable_semantic_validation": true,
+  "semantic_fragment_metric_key": "semantic_fragment",
+  "semantic_required_fields": [
+    "entity",
+    "relation",
+    "role",
+    "confidence",
+    "provenance"
+  ],
+  "semantic_min_confidence": 0.75,
+  "require_constraint_closure": true,
+  "constraint_alignment_metric_key": "alignment_tags",
+  "constraint_compiler_profile": "core_alignment_v1",
+  "constraint_required_tags": [
+    "categorical_alignment",
+    "closure_verified",
+    "oncology_safe"
+  ],
+  "constraint_forbidden_tags": [
+    "unaligned",
+    "safety_override"
+  ],
   "enable_governance_contract": true,
   "governance_required_gates": [
     "irb_approved",
@@ -51,12 +73,15 @@
   "siem_webhook_url_env": "FLWR_RD_SIEM_WEBHOOK_URL",
   "siem_timeout_seconds": 2,
   "siem_strike_alert_threshold": 2,
+  "benchmark_client_eval_p95_budget_ms": 50.0,
   "slash_amounts": {
     "SIGNATURE_INVALID": 25,
     "ATTESTATION_FAILED": 30,
     "NONCE_REPLAY": 20,
     "DP_BUDGET_EXCEEDED": 15,
     "POISONING_ANOMALY": 35,
+    "SEMANTIC_FRAGMENT_INVALID": 20,
+    "CONSTRAINT_CLOSURE_FAILED": 25,
     "CLIENT_NOT_ALLOWED": 20,
     "POLICY_ERROR": 10
   },
@@ -72,6 +97,8 @@
     "nonce",
     "payload_hash",
     "gradient_zscore",
+    "semantic_fragment",
+    "alignment_tags",
     "signature_hex",
     "attestation_quote_json",
     "attestation_signature_hex"

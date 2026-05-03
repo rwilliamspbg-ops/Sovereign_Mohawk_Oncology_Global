@@ -4,6 +4,7 @@ pyproject.toml
 ./security_wrapper/attestation.py
 ./security_wrapper/audit.py
 ./security_wrapper/checks.py
+./security_wrapper/constraint_profile.py
 ./security_wrapper/crypto.py
 ./security_wrapper/flwr_integration.py
 ./security_wrapper/governance_contract.py
@@ -11,6 +12,8 @@ pyproject.toml
 ./security_wrapper/poisoning.py
 ./security_wrapper/policy.py
 ./security_wrapper/rejection_codes.py
+./security_wrapper/replay.py
+./security_wrapper/semantic.py
 ./security_wrapper/siem.py
 ./security_wrapper/wal_ledger.py
 ./security_wrapper/wrapper.py
@@ -25,6 +28,7 @@ security_wrapper/nonce_store.py
 security_wrapper/poisoning.py
 security_wrapper/policy.py
 security_wrapper/rejection_codes.py
+security_wrapper/semantic.py
 security_wrapper/siem.py
 security_wrapper/wal_ledger.py
 security_wrapper/wrapper.py
@@ -41,6 +45,7 @@ tests/test_nonce_store.py
 tests/test_pentest_simulation.py
 tests/test_poisoning.py
 tests/test_policy.py
+tests/test_semantic_replay.py
 tests/test_siem.py
 tests/test_wal_ledger.py
 tests/test_wrapper_benchmarks.py

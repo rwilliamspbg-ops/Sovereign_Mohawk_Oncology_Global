@@ -13,6 +13,9 @@ from .nonce_store import (
 )
 from .poisoning import detect_poisoned_clients
 from .siem import StrikePatternAlerter, WebhookSiemForwarder
+from .semantic import has_constraint_closure, is_valid_semantic_fragment
+from .constraint_profile import CompiledConstraintProfile, compile_profile
+from .replay import replay_semantic_updates
 from .wal_ledger import WALIntegrityError, WriteAheadLedger
 
 __all__ = [
@@ -34,6 +37,11 @@ __all__ = [
     "detect_poisoned_clients",
     "StrikePatternAlerter",
     "WebhookSiemForwarder",
+    "is_valid_semantic_fragment",
+    "has_constraint_closure",
+    "CompiledConstraintProfile",
+    "compile_profile",
+    "replay_semantic_updates",
     "WriteAheadLedger",
     "WALIntegrityError",
 ]
