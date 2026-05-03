@@ -34,3 +34,9 @@
 - Package built and uploaded as workflow artifact
 - Pages deployment successful
 - Compliance evidence checklist completed
+
+## Release Readiness Checklist
+
+Use the operational go/no-go checklist here:
+
+- [Release Readiness Checklist](RELEASE_READINESS_CHECKLIST.md)

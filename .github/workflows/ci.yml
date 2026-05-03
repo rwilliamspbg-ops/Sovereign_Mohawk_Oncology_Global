@@ -36,6 +36,14 @@ jobs:
             --cov=flower_security_wrapper/security_wrapper \
             --cov-report=xml:flower_security_wrapper/coverage.xml
 
+      - name: Semantic replay determinism gate
+        run: |
+          pytest flower_security_wrapper/tests/test_semantic_replay.py -q
+
+      - name: Benchmark p95 SLO gate
+        run: |
+          pytest flower_security_wrapper/tests/test_wrapper_benchmarks.py -q
+
       - name: Build package
         run: |
           cd flower_security_wrapper

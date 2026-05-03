@@ -1,5 +1,5 @@
 import time
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, cast
 
 from .audit import AuditLogger
 from .attestation import AttestationVerifier
@@ -17,6 +17,19 @@ from .policy import SecurityPolicy
 from .poisoning import detect_poisoned_clients
 from .rejection_codes import RejectionCode
 from .siem import StrikePatternAlerter, WebhookSiemForwarder
+
+
+def _percentile(values: List[float], q: float) -> float:
+    if not values:
+        return 0.0
+    if len(values) == 1:
+        return values[0]
+    sorted_vals = sorted(values)
+    pos = max(0.0, min(1.0, q)) * (len(sorted_vals) - 1)
+    lower = int(pos)
+    upper = min(lower + 1, len(sorted_vals) - 1)
+    weight = pos - lower
+    return sorted_vals[lower] * (1.0 - weight) + sorted_vals[upper] * weight
 
 
 class SecurityWrapperStrategy:
@@ -95,24 +108,30 @@ class SecurityWrapperStrategy:
     ) -> Any:
         round_start = time.perf_counter()
         accepted: List[Tuple[Any, Any]] = []
-        poisoned_clients = set()
+        poisoned_clients: Set[str] = set()
         governance_rejections = 0
         poisoning_rejections = 0
         validation_rejections = 0
         client_eval_elapsed_ms: List[float] = []
 
         if self.policy.require_vector_consensus_checks:
-            vectors = {}
+            vectors: Dict[str, List[float]] = {}
             for _, fit_res in results:
                 metrics = dict(getattr(fit_res, "metrics", {}) or {})
                 client_id = str(metrics.get("client_id", "unknown"))
                 vec = metrics.get("gradient_vector")
-                if (
-                    isinstance(vec, list)
-                    and vec
-                    and all(isinstance(x, (int, float)) for x in vec)
-                ):
-                    vectors[client_id] = [float(x) for x in vec]
+                if isinstance(vec, list) and vec:
+                    numeric_vec: List[float] = []
+                    valid_vec = True
+                    vec_list = cast(List[Any], vec)
+                    for entry in vec_list:
+                        if isinstance(entry, (int, float)):
+                            numeric_vec.append(float(entry))
+                        else:
+                            valid_vec = False
+                            break
+                    if valid_vec and numeric_vec:
+                        vectors[client_id] = numeric_vec
 
             poisoned_clients = detect_poisoned_clients(
                 vectors,
@@ -244,6 +263,12 @@ class SecurityWrapperStrategy:
             )
 
         if self.policy.emit_round_benchmarks:
+            client_eval_p95_ms = round(_percentile(client_eval_elapsed_ms, 0.95), 3)
+            p95_budget = float(self.policy.benchmark_client_eval_p95_budget_ms)
+            p95_within_budget = True
+            if p95_budget > 0.0:
+                p95_within_budget = client_eval_p95_ms <= p95_budget
+
             benchmark_payload: Dict[str, object] = {
                 "round": server_round,
                 "total_results": len(results),
@@ -258,8 +283,23 @@ class SecurityWrapperStrategy:
                 )
                 if client_eval_elapsed_ms
                 else 0.0,
+                "p95_client_eval_ms": client_eval_p95_ms,
+                "p95_budget_ms": p95_budget,
+                "p95_within_budget": p95_within_budget,
             }
             self.audit.log("round_benchmark", benchmark_payload)
+
+            if p95_budget > 0.0 and not p95_within_budget:
+                self.audit.log(
+                    "round_benchmark_slo_violation",
+                    {
+                        "round": server_round,
+                        "metric": "p95_client_eval_ms",
+                        "value": client_eval_p95_ms,
+                        "budget_ms": p95_budget,
+                    },
+                )
+
             if self.benchmark_hook is not None:
                 try:
                     self.benchmark_hook(benchmark_payload)

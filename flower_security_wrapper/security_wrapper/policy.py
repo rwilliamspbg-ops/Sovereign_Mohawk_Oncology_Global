@@ -1,24 +1,36 @@
 from dataclasses import dataclass, field
 import json
 import os
-from typing import Dict, List
+from typing import Any, Dict, List, cast
+
+
+def _str_list() -> List[str]:
+    return []
+
+
+def _str_str_dict() -> Dict[str, str]:
+    return {}
+
+
+def _str_int_dict() -> Dict[str, int]:
+    return {}
 
 
 @dataclass
 class SecurityPolicy:
-    allowed_client_ids: List[str] = field(default_factory=list)
-    client_public_keys: Dict[str, str] = field(default_factory=dict)
+    allowed_client_ids: List[str] = field(default_factory=_str_list)
+    client_public_keys: Dict[str, str] = field(default_factory=_str_str_dict)
     client_public_keys_env: str = ""
     require_client_public_key_allowlist: bool = False
     require_attestation: bool = True
     attestation_mode: str = "metric_flag"
     attestation_signature_mode: str = "any"
     allow_attestation_metric_fallback: bool = True
-    attestation_public_keys: Dict[str, str] = field(default_factory=dict)
+    attestation_public_keys: Dict[str, str] = field(default_factory=_str_str_dict)
     attestation_public_keys_env: str = ""
     require_attestation_public_key_allowlist: bool = False
     attestation_max_age_seconds: int = 300
-    attestation_expected_pcrs: Dict[str, str] = field(default_factory=dict)
+    attestation_expected_pcrs: Dict[str, str] = field(default_factory=_str_str_dict)
     attestation_require_nonce_binding: bool = True
     require_signature: bool = True
     signature_mode: str = "ed25519"
@@ -34,6 +46,23 @@ class SecurityPolicy:
     min_gradient_cosine_similarity: float = 0.1
     max_krum_score: float = 15.0
     require_vector_consensus_checks: bool = True
+    enable_semantic_validation: bool = False
+    semantic_fragment_metric_key: str = "semantic_fragment"
+    semantic_required_fields: List[str] = field(
+        default_factory=lambda: [
+            "entity",
+            "relation",
+            "role",
+            "confidence",
+            "provenance",
+        ]
+    )
+    semantic_min_confidence: float = 0.7
+    require_constraint_closure: bool = False
+    constraint_alignment_metric_key: str = "alignment_tags"
+    constraint_required_tags: List[str] = field(default_factory=_str_list)
+    constraint_forbidden_tags: List[str] = field(default_factory=_str_list)
+    constraint_compiler_profile: str = ""
     enable_governance_contract: bool = True
     governance_required_gates: List[str] = field(
         default_factory=lambda: [
@@ -45,16 +74,17 @@ class SecurityPolicy:
             "dp_within_budget",
         ]
     )
-    governance_readiness_signals: List[str] = field(default_factory=list)
+    governance_readiness_signals: List[str] = field(default_factory=_str_list)
     slashing_enabled: bool = True
     initial_stake: int = 100
     strike_quarantine_threshold: int = 3
-    slash_amounts: Dict[str, int] = field(default_factory=dict)
+    slash_amounts: Dict[str, int] = field(default_factory=_str_int_dict)
     siem_webhook_url: str = ""
     siem_webhook_url_env: str = ""
     siem_timeout_seconds: int = 2
     siem_strike_alert_threshold: int = 3
     emit_round_benchmarks: bool = True
+    benchmark_client_eval_p95_budget_ms: float = 0.0
     required_metrics: List[str] = field(
         default_factory=lambda: [
             "client_id",
@@ -73,13 +103,17 @@ def _load_json_env_map(env_var: str) -> Dict[str, str]:
     try:
         parsed = json.loads(raw)
         if isinstance(parsed, dict):
-            return {str(k): str(v) for k, v in parsed.items()}
+            parsed_map = cast(Dict[Any, Any], parsed)
+            out: Dict[str, str] = {}
+            for key, value in parsed_map.items():
+                out[str(key)] = str(value)
+            return out
     except json.JSONDecodeError:
         pass
     return {}
 
 
-def _apply_env_overrides(data: Dict) -> None:
+def _apply_env_overrides(data: Dict[str, Any]) -> None:
     nonce_mode = os.getenv("FLWR_NONCE_STORE_TYPE", "").strip()
     if nonce_mode:
         data["nonce_store_mode"] = nonce_mode
@@ -111,7 +145,7 @@ def resolve_policy_path(default_path: str = "policy.rare_disease.json") -> str:
 
 def load_policy_from_json(path: str) -> SecurityPolicy:
     with open(path, "r", encoding="utf-8") as f:
-        data: Dict = json.load(f)
+        data = cast(Dict[str, Any], json.load(f))
 
     key_env = str(data.get("client_public_keys_env", "")).strip()
     if key_env:

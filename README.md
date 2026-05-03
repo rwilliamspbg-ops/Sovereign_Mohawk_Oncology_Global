@@ -190,6 +190,7 @@ Compliance and control-evidence docs:
 
 - [Beta Release Plan](docs/beta/BETA_RELEASE.md)
 - [Compliance Evidence](docs/beta/COMPLIANCE_EVIDENCE.md)
+- [Release Readiness Checklist](docs/beta/RELEASE_READINESS_CHECKLIST.md)
 
 These capture how Beta controls map to:
 

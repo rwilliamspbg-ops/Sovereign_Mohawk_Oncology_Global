@@ -2,13 +2,14 @@ import json
 import os
 import tempfile
 import unittest
+from typing import Any, Dict
 
 from security_wrapper.policy import load_policy_from_json, resolve_policy_path
 
 
 class TestPolicyLoading(unittest.TestCase):
     def test_load_policy_json(self):
-        data = {
+        data: Dict[str, Any] = {
             "allowed_client_ids": ["a"],
             "client_public_keys": {"a": "00"},
             "require_attestation": True,
@@ -41,7 +42,7 @@ class TestPolicyLoading(unittest.TestCase):
         os.environ["TEST_ATTEST_KEYS_JSON"] = json.dumps({"site-a": "def456"})
         os.environ["TEST_SIEM_URL"] = "http://127.0.0.1:9999/hook"
 
-        data = {
+        data: Dict[str, Any] = {
             "allowed_client_ids": ["site-a"],
             "client_public_keys": {},
             "client_public_keys_env": "TEST_CLIENT_KEYS_JSON",
@@ -63,7 +64,7 @@ class TestPolicyLoading(unittest.TestCase):
         os.environ["FLWR_NONCE_STORE_TYPE"] = "sqlite"
         os.environ["FLWR_NONCE_STORE_PATH"] = "./dev_nonce.db"
 
-        data = {
+        data: Dict[str, Any] = {
             "allowed_client_ids": ["site-a"],
             "nonce_store_mode": "memory",
             "nonce_sqlite_path": "nonce_cache.db",
@@ -79,6 +80,59 @@ class TestPolicyLoading(unittest.TestCase):
     def test_resolve_policy_path_prefers_strict_env(self):
         os.environ["FLWR_POLICY_FILE"] = "policy.rare_disease.json"
         self.assertEqual(resolve_policy_path("fallback.json"), "policy.rare_disease.json")
+
+    def test_load_policy_semantic_runtime_fields(self):
+        data: Dict[str, Any] = {
+            "allowed_client_ids": ["site-a"],
+            "enable_semantic_validation": True,
+            "semantic_fragment_metric_key": "semantic_fragment",
+            "semantic_required_fields": [
+                "entity",
+                "relation",
+                "role",
+                "confidence",
+                "provenance",
+            ],
+            "semantic_min_confidence": 0.8,
+            "require_constraint_closure": True,
+            "constraint_alignment_metric_key": "alignment_tags",
+            "constraint_compiler_profile": "core_alignment_v1",
+            "constraint_required_tags": ["categorical_alignment"],
+            "constraint_forbidden_tags": ["unaligned"],
+            "benchmark_client_eval_p95_budget_ms": 25.0,
+        }
+        with tempfile.NamedTemporaryFile("w", delete=False) as f:
+            json.dump(data, f)
+            path = f.name
+
+        policy = load_policy_from_json(path)
+        self.assertTrue(policy.enable_semantic_validation)
+        self.assertEqual(policy.semantic_fragment_metric_key, "semantic_fragment")
+        self.assertEqual(policy.semantic_min_confidence, 0.8)
+        self.assertTrue(policy.require_constraint_closure)
+        self.assertEqual(policy.constraint_compiler_profile, "core_alignment_v1")
+        self.assertEqual(policy.constraint_required_tags, ["categorical_alignment"])
+        self.assertEqual(policy.constraint_forbidden_tags, ["unaligned"])
+        self.assertEqual(policy.benchmark_client_eval_p95_budget_ms, 25.0)
+
+    def test_rare_disease_profile_includes_semantic_slashing(self):
+        policy_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "policy.rare_disease.json",
+        )
+        policy = load_policy_from_json(policy_path)
+        self.assertEqual(policy.constraint_compiler_profile, "core_alignment_v1")
+        self.assertIn("semantic_fragment", policy.required_metrics)
+        self.assertIn("alignment_tags", policy.required_metrics)
+        self.assertEqual(
+            policy.slash_amounts.get("SEMANTIC_FRAGMENT_INVALID"),
+            20,
+        )
+        self.assertEqual(
+            policy.slash_amounts.get("CONSTRAINT_CLOSURE_FAILED"),
+            25,
+        )
 
 
 if __name__ == "__main__":

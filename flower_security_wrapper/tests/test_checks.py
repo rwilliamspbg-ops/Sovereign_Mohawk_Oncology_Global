@@ -1,4 +1,5 @@
 import unittest
+from typing import Any, Dict
 
 from security_wrapper.checks import evaluate_update
 from security_wrapper.policy import SecurityPolicy
@@ -22,7 +23,7 @@ class TestChecks(unittest.TestCase):
         )
 
     def test_accept_valid_update(self):
-        metrics = {
+        metrics: Dict[str, Any] = {
             "client_id": "site-1",
             "signature_verified": True,
             "attestation_ok": True,
@@ -37,7 +38,7 @@ class TestChecks(unittest.TestCase):
         self.assertIsNone(code)
 
     def test_reject_replayed_nonce(self):
-        metrics = {
+        metrics: Dict[str, Any] = {
             "client_id": "site-1",
             "signature_verified": True,
             "attestation_ok": True,
@@ -53,7 +54,7 @@ class TestChecks(unittest.TestCase):
         self.assertEqual(code, RejectionCode.NONCE_REPLAY)
 
     def test_reject_gradient_anomaly(self):
-        metrics = {
+        metrics: Dict[str, Any] = {
             "client_id": "site-1",
             "signature_verified": True,
             "attestation_ok": True,
@@ -83,7 +84,7 @@ class TestChecks(unittest.TestCase):
                 "signature_hex",
             ],
         )
-        metrics = {
+        metrics: Dict[str, Any] = {
             "client_id": "site-1",
             "epsilon_spent": 0.2,
             "payload_size_bytes": 900,
@@ -117,7 +118,7 @@ class TestChecks(unittest.TestCase):
                 "attestation_signature_hex",
             ],
         )
-        metrics = {
+        metrics: Dict[str, Any] = {
             "client_id": "site-1",
             "attestation_ok": True,
             "signature_verified": True,
@@ -132,6 +133,202 @@ class TestChecks(unittest.TestCase):
         ok, code = evaluate_update(metrics, strict_policy, set(), server_round=2)
         self.assertFalse(ok)
         self.assertEqual(code, RejectionCode.ATTESTATION_FAILED)
+
+    def test_accept_semantic_fragment_with_constraint_closure(self):
+        semantic_policy = SecurityPolicy(
+            allowed_client_ids=["site-1"],
+            signature_mode="metric_flag",
+            enable_semantic_validation=True,
+            require_constraint_closure=True,
+            constraint_required_tags=["categorical_alignment", "closure_verified"],
+            constraint_forbidden_tags=["unaligned"],
+            required_metrics=[
+                "client_id",
+                "attestation_ok",
+                "epsilon_spent",
+                "payload_size_bytes",
+                "nonce",
+                "payload_hash",
+                "gradient_zscore",
+                "semantic_fragment",
+                "alignment_tags",
+            ],
+        )
+        metrics: Dict[str, Any] = {
+            "client_id": "site-1",
+            "signature_verified": True,
+            "attestation_ok": True,
+            "epsilon_spent": 0.1,
+            "payload_size_bytes": 700,
+            "nonce": "semantic-ok",
+            "payload_hash": "deadbeef",
+            "gradient_zscore": 0.1,
+            "alignment_tags": ["categorical_alignment", "closure_verified"],
+            "semantic_fragment": {
+                "entity": "tumor_subtype",
+                "relation": "supports",
+                "role": "feature",
+                "confidence": 0.93,
+                "provenance": "trial-cohort-a",
+            },
+        }
+
+        ok, code = evaluate_update(metrics, semantic_policy, set(), server_round=3)
+        self.assertTrue(ok)
+        self.assertIsNone(code)
+
+    def test_reject_semantic_fragment_when_closure_missing_required_tag(self):
+        semantic_policy = SecurityPolicy(
+            allowed_client_ids=["site-1"],
+            signature_mode="metric_flag",
+            enable_semantic_validation=True,
+            require_constraint_closure=True,
+            constraint_required_tags=["categorical_alignment", "closure_verified"],
+            required_metrics=[
+                "client_id",
+                "attestation_ok",
+                "epsilon_spent",
+                "payload_size_bytes",
+                "nonce",
+                "payload_hash",
+                "gradient_zscore",
+                "semantic_fragment",
+                "alignment_tags",
+            ],
+        )
+        metrics: Dict[str, Any] = {
+            "client_id": "site-1",
+            "signature_verified": True,
+            "attestation_ok": True,
+            "epsilon_spent": 0.1,
+            "payload_size_bytes": 700,
+            "nonce": "semantic-fail",
+            "payload_hash": "deadbeef",
+            "gradient_zscore": 0.1,
+            "alignment_tags": ["categorical_alignment"],
+            "semantic_fragment": {
+                "entity": "tumor_subtype",
+                "relation": "supports",
+                "role": "feature",
+                "confidence": 0.93,
+                "provenance": "trial-cohort-a",
+            },
+        }
+
+        ok, code = evaluate_update(metrics, semantic_policy, set(), server_round=4)
+        self.assertFalse(ok)
+        self.assertEqual(code, RejectionCode.CONSTRAINT_CLOSURE_FAILED)
+
+    def test_constraint_compiler_core_alignment_profile_autofills_required_tags(self):
+        semantic_policy = SecurityPolicy(
+            allowed_client_ids=["site-1"],
+            signature_mode="metric_flag",
+            enable_semantic_validation=True,
+            require_constraint_closure=True,
+            constraint_compiler_profile="core_alignment_v1",
+            constraint_required_tags=["oncology_safe"],
+            required_metrics=[
+                "client_id",
+                "attestation_ok",
+                "signature_verified",
+                "irb_approved",
+                "dpo_reviewed",
+                "data_deidentified",
+                "epsilon_spent",
+                "payload_size_bytes",
+                "nonce",
+                "payload_hash",
+                "gradient_zscore",
+                "semantic_fragment",
+                "alignment_tags",
+            ],
+        )
+
+        metrics: Dict[str, Any] = {
+            "client_id": "site-1",
+            "signature_verified": True,
+            "attestation_ok": True,
+            "irb_approved": True,
+            "dpo_reviewed": True,
+            "data_deidentified": True,
+            "epsilon_spent": 0.2,
+            "dp_limit": 0.25,
+            "payload_size_bytes": 700,
+            "nonce": "compiled-ok",
+            "payload_hash": "deadbeef",
+            "gradient_zscore": 0.1,
+            "alignment_tags": ["oncology_safe"],
+            "semantic_fragment": {
+                "entity": "tumor_subtype",
+                "relation": "supports",
+                "role": "feature",
+                "confidence": 0.93,
+                "provenance": "trial-cohort-a",
+            },
+        }
+
+        ok, code = evaluate_update(metrics, semantic_policy, set(), server_round=5)
+        self.assertTrue(ok)
+        self.assertIsNone(code)
+
+    def test_constraint_compiler_blocks_forbidden_tag_state(self):
+        semantic_policy = SecurityPolicy(
+            allowed_client_ids=["site-1"],
+            signature_mode="metric_flag",
+            enable_semantic_validation=True,
+            require_constraint_closure=True,
+            constraint_compiler_profile="core_alignment_v1",
+            constraint_required_tags=["oncology_safe"],
+            required_metrics=[
+                "client_id",
+                "attestation_ok",
+                "signature_verified",
+                "irb_approved",
+                "dpo_reviewed",
+                "data_deidentified",
+                "epsilon_spent",
+                "payload_size_bytes",
+                "nonce",
+                "payload_hash",
+                "gradient_zscore",
+                "semantic_fragment",
+                "alignment_tags",
+            ],
+        )
+
+        metrics: Dict[str, Any] = {
+            "client_id": "site-1",
+            "signature_verified": True,
+            "attestation_ok": False,
+            "irb_approved": True,
+            "dpo_reviewed": True,
+            "data_deidentified": True,
+            "epsilon_spent": 0.2,
+            "dp_limit": 0.25,
+            "payload_size_bytes": 700,
+            "nonce": "compiled-fail",
+            "payload_hash": "deadbeef",
+            "gradient_zscore": 0.1,
+            "alignment_tags": [
+                "oncology_safe",
+                "categorical_alignment",
+                "closure_verified",
+                "privacy_preserved",
+                "irb_validated",
+                "dpo_reviewed",
+            ],
+            "semantic_fragment": {
+                "entity": "tumor_subtype",
+                "relation": "supports",
+                "role": "feature",
+                "confidence": 0.93,
+                "provenance": "trial-cohort-a",
+            },
+        }
+
+        ok, code = evaluate_update(metrics, semantic_policy, set(), server_round=6)
+        self.assertFalse(ok)
+        self.assertEqual(code, RejectionCode.CONSTRAINT_CLOSURE_FAILED)
 
 
 if __name__ == "__main__":

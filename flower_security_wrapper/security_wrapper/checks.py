@@ -2,9 +2,15 @@ from typing import Any, Dict, Optional, Set, Tuple
 
 from .attestation import AttestationVerifier
 from .crypto import Ed25519Verifier, build_signature_message
+from .constraint_profile import compile_profile, merge_tags
 from .nonce_store import NonceStore
 from .policy import SecurityPolicy
 from .rejection_codes import RejectionCode
+from .semantic import (
+    has_constraint_closure,
+    is_valid_semantic_fragment,
+    parse_semantic_fragment,
+)
 
 
 def check_required_metrics(
@@ -127,6 +133,58 @@ def check_poisoning_anomaly(
     return None
 
 
+def check_semantic_fragment(
+    metrics: Dict[str, Any], policy: SecurityPolicy
+) -> Optional[RejectionCode]:
+    if not policy.enable_semantic_validation:
+        return None
+
+    fragment = parse_semantic_fragment(
+        metrics.get(policy.semantic_fragment_metric_key, None)
+    )
+    if fragment is None:
+        return RejectionCode.SEMANTIC_FRAGMENT_INVALID
+
+    if not is_valid_semantic_fragment(
+        fragment=fragment,
+        required_fields=policy.semantic_required_fields,
+        min_confidence=policy.semantic_min_confidence,
+    ):
+        return RejectionCode.SEMANTIC_FRAGMENT_INVALID
+
+    return None
+
+
+def check_constraint_closure(
+    metrics: Dict[str, Any], policy: SecurityPolicy
+) -> Optional[RejectionCode]:
+    if not policy.require_constraint_closure:
+        return None
+
+    required_tags = list(policy.constraint_required_tags)
+    forbidden_tags = list(policy.constraint_forbidden_tags)
+
+    if policy.constraint_compiler_profile:
+        compiled = compile_profile(policy.constraint_compiler_profile, metrics)
+        required_tags = sorted(set(required_tags + compiled.required_tags))
+        forbidden_tags = sorted(set(forbidden_tags + compiled.forbidden_tags))
+        if compiled.forbidden_tags:
+            return RejectionCode.CONSTRAINT_CLOSURE_FAILED
+        metrics[policy.constraint_alignment_metric_key] = merge_tags(
+            metrics.get(policy.constraint_alignment_metric_key, []),
+            compiled.required_tags,
+        )
+
+    if not has_constraint_closure(
+        raw_tags=metrics.get(policy.constraint_alignment_metric_key, []),
+        required_tags=required_tags,
+        forbidden_tags=forbidden_tags,
+    ):
+        return RejectionCode.CONSTRAINT_CLOSURE_FAILED
+
+    return None
+
+
 def check_dp_budget(
     metrics: Dict[str, Any], policy: SecurityPolicy
 ) -> Optional[RejectionCode]:
@@ -173,6 +231,8 @@ def evaluate_update(
     checks = [
         check_required_metrics,
         check_client_allowlist,
+        check_semantic_fragment,
+        check_constraint_closure,
         check_dp_budget,
         check_payload_size,
         check_poisoning_anomaly,

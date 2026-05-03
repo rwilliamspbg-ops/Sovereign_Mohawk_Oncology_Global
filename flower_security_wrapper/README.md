@@ -92,6 +92,11 @@ These workflows produce beta artifacts including:
 - `dist/*.whl` and `dist/*.tar.gz`
 - policy snapshots and git evidence files
 
+Additional explicit quality gates now run in CI:
+
+- Semantic replay determinism: `tests/test_semantic_replay.py`
+- Benchmark p95 SLO regression: `tests/test_wrapper_benchmarks.py`
+
 ## Environment-based secret loading
 
 To avoid storing public key registries and SIEM endpoints directly in policy files,
